@@ -212,4 +212,4 @@ else:
     CacheConfig.config_cache(options, system)
 
 root = Root(full_system = False, system = system)
-Simulation.run(options, root, system, FutureClass)
+Simulation.run(options, root, system, FutureClass, 1)

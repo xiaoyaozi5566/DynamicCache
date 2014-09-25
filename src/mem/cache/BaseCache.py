@@ -64,7 +64,7 @@ class BaseCache(MemObject):
     system = Param.System(Parent.any, "System we belong to")
     do_cache_trace = Param.Bool(False, "should a cache trace be saved?")
     l3_trace_file  = Param.String("l3trace.txt", "l3 trace output file")
-    num_tcs        = Param.Unsigned(2, "number of timing compartments" );
+    num_tcs        = Param.Unsigned(1, "number of timing compartments" );
     use_set_part   = Param.Bool(False, "Use set partitioning in L3?")
     use_way_part   = Param.Bool(False, "Use way partitioning in L3?")
     split_mshrq    = Param.Bool(False, "Use MSHR Queue per TC?")
