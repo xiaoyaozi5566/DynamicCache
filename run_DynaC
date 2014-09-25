@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./build/ARM/gem5.fast configs/dramsim2/dynamic_cache.py --cpu-type=detailed --caches --l2cache -c tests/test-progs/test/arm/attacker_L
