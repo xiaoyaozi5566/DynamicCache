@@ -243,7 +243,7 @@ class Cache : public BaseCache
      * @param update True if the replacement data should be updated.
      * @return Boolean indicating whether the request was satisfied.
      */
-    bool access(PacketPtr pkt, BlkType *&blk,
+    virtual bool access(PacketPtr pkt, BlkType *&blk,
                 int &lat, PacketList &writebacks);
 
     /**
@@ -268,7 +268,7 @@ class Cache : public BaseCache
      * @param writebacks List for any writebacks that need to be performed.
      * @return Pointer to the new cache block.
      */
-    BlkType *handleFill(PacketPtr pkt, BlkType *blk,
+    virtual BlkType *handleFill(PacketPtr pkt, BlkType *blk,
                         PacketList &writebacks);
 
     void satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
@@ -305,7 +305,7 @@ class Cache : public BaseCache
      * @param pkt The request to perform.
      * @return The result of the access.
      */
-    bool timingAccess(PacketPtr pkt);
+    virtual bool timingAccess(PacketPtr pkt);
 
     /**
      * Performs the access specified by the request.
@@ -325,7 +325,7 @@ class Cache : public BaseCache
      * Handles a response (cache line fill/write ack) from the bus.
      * @param pkt The request being responded to.
      */
-    void handleResponse(PacketPtr pkt);
+    virtual void handleResponse(PacketPtr pkt);
 
     /**
      * Snoops bus transactions to maintain coherence.

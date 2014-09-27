@@ -61,6 +61,7 @@
 #include "mem/cache/mshr.hh"
 #include "mem/cache/split_mshr_cache.hh"
 #include "mem/cache/split_rport_cache.hh"
+#include "mem/cache/dirty_cache.hh"
 #include "sim/sim_exit.hh"
 
 template<class TagStore>
@@ -1868,3 +1869,38 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
                                   "CpuSidePort");
 }
 
+template<class TagStore>
+DirtyCache<TagStore>::DirtyCache( const Params *p, TagStore *tags )
+    : SplitRPortCache<TagStore>( p, tags )
+{
+}
+
+template<class TagStore>
+bool
+DirtyCache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
+                        int &lat, PacketList &writebacks)
+{
+	return true;
+}
+
+template<class TagStore>
+bool
+DirtyCache<TagStore>::timingAccess(PacketPtr pkt)
+{
+	return true;
+}
+
+template<class TagStore>
+void
+DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
+{
+	return;
+}
+
+template<class TagStore>
+typename DirtyCache<TagStore>::BlkType*
+DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
+                    PacketList &writebacks)
+{
+	return NULL;
+}
