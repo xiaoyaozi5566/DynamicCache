@@ -49,6 +49,7 @@
 #include "mem/cache/tags/lru.hh"
 #include "mem/cache/tags/splru.hh"
 #include "mem/cache/tags/wplru.hh"
+#include "mem/cache/tags/dclru.hh"
 #endif
 
 #if defined(USE_CACHE_FALRU)
@@ -90,7 +91,9 @@ using namespace std;
 #if defined(USE_CACHE_LRU)
 #define BUILD_LRU_CACHE do {                                            \
         LRU *tags;                                                      \
-        if( use_way_part )                                              \
+		if( dirty_cache )                                              \
+			tags = new DCLRU( numSets, block_size, assoc, latency ); \
+        else if( use_way_part )                                              \
             tags = new WPLRU( numSets, block_size, assoc, latency, num_tcs ); \
         else if( use_set_part )                                               \
             tags = new SPLRU( numSets, block_size, assoc, latency, num_tcs );     \

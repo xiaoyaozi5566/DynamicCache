@@ -67,6 +67,7 @@ class BaseCache(MemObject):
     num_tcs        = Param.Unsigned(1, "number of timing compartments" );
     use_set_part   = Param.Bool(False, "Use set partitioning in L3?")
     use_way_part   = Param.Bool(False, "Use way partitioning in L3?")
+    dirty_cache    = Param.Bool(False, "Use dirty cache implementation")
     split_mshrq    = Param.Bool(False, "Use MSHR Queue per TC?")
     split_rport    = Param.Bool(False, "Use Split Response Port Queue per TC?")
     cw_first       = Param.Bool(True, "Use critical word first timing")
