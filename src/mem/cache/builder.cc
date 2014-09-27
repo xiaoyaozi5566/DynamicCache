@@ -40,6 +40,7 @@
 #include "mem/cache/base.hh"
 #include "mem/cache/split_mshr_cache.hh"
 #include "mem/cache/split_rport_cache.hh"
+#include "mem/cache/dirty_cache.hh"
 #include "mem/cache/cache.hh"
 #include "mem/config/cache.hh"
 #include "params/BaseCache.hh"
@@ -70,6 +71,8 @@ using namespace std;
             retval = new SplitRPortCache<TAGS>(this, tags);   \
         else if( split_mshrq )                                \
             retval = new SplitMSHRCache<TAGS>(this, tags);    \
+        else if( dirty_cache )                                \
+            retval = new DirtyCache<TAGS>(this, tags);        \
         else                                                  \
             retval = new Cache<TAGS>(this, tags);             \
         return retval;                                        \

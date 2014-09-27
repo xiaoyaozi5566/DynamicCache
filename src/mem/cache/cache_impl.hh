@@ -1880,7 +1880,80 @@ bool
 DirtyCache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                         int &lat, PacketList &writebacks)
 {
-	return true;
+    if (pkt->req->isUncacheable()) {
+        if (pkt->req->isClearLL()) {
+            this->tags->clearLocks();
+        } else if (pkt->isWrite()) {
+           blk = this->tags->findBlock(pkt->getAddr(), pkt->threadID );
+           if (blk != NULL) {
+               this->tags->invalidateBlk( blk, pkt->threadID );
+           }
+        }
+
+        blk = NULL;
+        lat = this->hitLatency;
+        return false;
+    }
+
+    int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+
+    blk = this->tags->accessBlock(pkt->getAddr(), lat, id, pkt->threadID);
+
+    DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
+            pkt->req->isInstFetch() ? " (ifetch)" : "",
+            pkt->getAddr(), (blk) ? "hit" : "miss");
+
+    if (blk != NULL) {
+
+        if (pkt->needsExclusive() ? blk->isWritable() : blk->isReadable()) {
+            // OK to satisfy access
+            this->incHitCount(pkt);
+            this->satisfyCpuSideRequest(pkt, blk);
+            return true;
+        }
+    }
+
+    // Can't satisfy access normally... either no block (blk == NULL)
+    // or have block but need exclusive & only have shared.
+
+    // Writeback handling is special case.  We can write the block
+    // into the cache without having a writeable copy (or any copy at
+    // all).
+    if (pkt->cmd == MemCmd::Writeback) {
+        assert(blkSize == pkt->getSize());
+        if (blk == NULL) {
+            // need to do a replacement
+            blk = this->allocateBlock(pkt->getAddr(), writebacks, pkt->threadID);
+            if (blk == NULL) {
+                // no replaceable block available, give up.
+                // writeback will be forwarded to next level.
+                this->incMissCount(pkt);
+                return false;
+            }
+            int id = pkt->req->masterId();
+            this->tags->insertBlock(pkt->getAddr(), blk, id, pkt->threadID );
+            blk->status = BlkValid | BlkReadable;
+        }
+        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), this->blkSize);
+        blk->status |= BlkDirty;
+        if (pkt->isSupplyExclusive()) {
+            blk->status |= BlkWritable;
+        }
+        // nothing else to do; writeback doesn't expect response
+        assert(!pkt->needsResponse());
+        this->incHitCount(pkt);
+        return true;
+    }
+
+    this->incMissCount(pkt);
+
+    if (blk == NULL && pkt->isLLSC() && pkt->isWrite()) {
+        // complete miss on store conditional... just give up now
+        pkt->req->setExtraData(0);
+        return true;
+    }
+
+    return false;
 }
 
 template<class TagStore>
