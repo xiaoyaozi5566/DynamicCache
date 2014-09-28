@@ -2161,5 +2161,69 @@ typename DirtyCache<TagStore>::BlkType*
 DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
                     PacketList &writebacks)
 {
-	return NULL;
+    Addr addr = pkt->getAddr();
+	bool fake_miss = false;
+
+    if (blk == NULL) {
+        // better have read new data...
+        assert(pkt->hasData());
+		// Yao: check if it's fake miss
+		BlkType *blk_H = this->tags->findBlock( pkt->getAddr(), 1, 1 );
+		fake_miss = (blk_H != NULL);
+        // need to do a replacement
+        blk = this->allocateBlock(addr, writebacks, pkt->writeLabel);
+        if (blk == NULL) {
+            // No replaceable block... just use temporary storage to
+            // complete the current request and then get rid of it
+            assert(!tempBlock->isValid());
+            blk = this->tempBlock;
+            this->tempBlock->set = this->tags->extractSet(addr);
+            this->tempBlock->tag = this->tags->extractTag(addr);
+            DPRINTF(Cache, "using temp block for %x\n", addr);
+        } else {
+            int id = pkt->req->masterId();
+            this->tags->insertBlock(pkt->getAddr(), blk, id, pkt->writeLabel );
+        }
+
+        // starting from scratch with a new block
+        blk->status = 0;
+    } else {
+        // existing block... probably an upgrade
+        assert(blk->tag == tags->extractTag(addr));
+        // either we're getting new data or the block should already be valid
+        assert(pkt->hasData() || blk->isValid());
+        // don't clear block status... if block is already dirty we
+        // don't want to lose that
+    }
+
+    // Yao: Mark the new cache line as dirty for dirty cache
+	blk->status |= BlkValid | BlkReadable | BlkDirty;
+
+    if (!pkt->sharedAsserted()) {
+        blk->status |= BlkWritable;
+        // If we got this via cache-to-cache transfer (i.e., from a
+        // cache that was an owner) and took away that owner's copy,
+        // then we need to write it back.  Normally this happens
+        // anyway as a side effect of getting a copy to write it, but
+        // there are cases (such as failed store conditionals or
+        // compare-and-swaps) where we'll demand an exclusive copy but
+        // end up not writing it.
+        if (pkt->memInhibitAsserted())
+            blk->status |= BlkDirty;
+    }
+
+    DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
+            addr, old_state, blk->status);
+
+    // if we got new data, copy it in
+    if (pkt->isRead()) {
+        if (fake_miss)
+			std::memcpy(blk->data, blk->data, this->blkSize);
+		else
+			std::memcpy(blk->data, pkt->getPtr<uint8_t>(), this->blkSize);
+    }
+
+    blk->whenReady = pkt->finishTime;
+
+    return blk;
 }
