@@ -188,6 +188,10 @@ public:
     FALRUBlk* accessBlock(Addr addr, int &lat, int context_src, uint64_t tid){
         return accessBlock(addr, lat, context_src);
     }
+	
+    virtual FALRUBlk* accessBlock(Addr addr, int &lat, int context_src, uint64_t readLabel, uint64_t writeLabel){
+        return NULL;
+    }
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -199,6 +203,8 @@ public:
     FALRUBlk* findBlock(Addr addr, uint64_t tid) const{
         return findBlock( addr, tid );
     }
+	virtual FALRUBlk* findBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel) const{ return NULL;}
+	virtual uint64_t locateBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel){ return 0;}
 
     /**
      * Find a replacement block for the address provided.

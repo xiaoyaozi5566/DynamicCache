@@ -1884,9 +1884,10 @@ DirtyCache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         if (pkt->req->isClearLL()) {
             this->tags->clearLocks();
         } else if (pkt->isWrite()) {
-           blk = this->tags->findBlock(pkt->getAddr(), pkt->threadID );
+           blk = this->tags->findBlock(pkt->getAddr(), pkt->readLabel, pkt->writeLabel );
            if (blk != NULL) {
-               this->tags->invalidateBlk( blk, pkt->threadID );
+			   uint64_t locBlk = this->tags->locateBlock(pkt->getAddr(), pkt->readLabel, pkt->writeLabel );
+               this->tags->invalidateBlk( blk, locBlk );
            }
         }
 
@@ -1897,7 +1898,7 @@ DirtyCache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
     int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
 
-    blk = this->tags->accessBlock(pkt->getAddr(), lat, id, pkt->threadID);
+    blk = this->tags->accessBlock(pkt->getAddr(), lat, id, pkt->readLabel, pkt->writeLabel);
 
     DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
@@ -1923,7 +1924,7 @@ DirtyCache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         assert(blkSize == pkt->getSize());
         if (blk == NULL) {
             // need to do a replacement
-            blk = this->allocateBlock(pkt->getAddr(), writebacks, pkt->threadID);
+            blk = this->allocateBlock(pkt->getAddr(), writebacks, pkt->writeLabel);
             if (blk == NULL) {
                 // no replaceable block available, give up.
                 // writeback will be forwarded to next level.
@@ -1931,7 +1932,7 @@ DirtyCache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 return false;
             }
             int id = pkt->req->masterId();
-            this->tags->insertBlock(pkt->getAddr(), blk, id, pkt->threadID );
+            this->tags->insertBlock(pkt->getAddr(), blk, id, pkt->writeLabel );
             blk->status = BlkValid | BlkReadable;
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), this->blkSize);

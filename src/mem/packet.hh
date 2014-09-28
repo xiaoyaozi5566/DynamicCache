@@ -429,6 +429,8 @@ class Packet : public Printable
     SenderState *senderState;
     
     uint64_t threadID;
+	uint64_t readLabel;
+	uint64_t writeLabel;
 
     /// Return the string name of the cmd field (for debugging and
     /// tracing).
@@ -534,7 +536,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL), threadID(0)
+           time(curTick()), senderState(NULL), threadID(0), readLabel(0), writeLabel(0)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr();
@@ -555,7 +557,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL), threadID(_threadID)
+           time(curTick()), senderState(NULL), threadID(_threadID), readLabel(0), writeLabel(0)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr();
@@ -576,7 +578,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL), threadID(0)
+           time(curTick()), senderState(NULL), threadID(0), readLabel(0), writeLabel(0)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
@@ -595,7 +597,7 @@ class Packet : public Printable
         :  cmd(_cmd), req(_req), data(NULL),
            src(InvalidPortID), dest(InvalidPortID),
            bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL), threadID(_threadID)
+           time(curTick()), senderState(NULL), threadID(_threadID), readLabel(0), writeLabel(0)
     {
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
@@ -617,7 +619,7 @@ class Packet : public Printable
            data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
            addr(pkt->addr), size(pkt->size), src(pkt->src), dest(pkt->dest),
            bytesValidStart(pkt->bytesValidStart), bytesValidEnd(pkt->bytesValidEnd),
-           time(curTick()), senderState(pkt->senderState), threadID(pkt->threadID)
+           time(curTick()), senderState(pkt->senderState), threadID(pkt->threadID), readLabel(0), writeLabel(0)
     {
         if (!clearFlags)
             flags.set(pkt->flags & COPY_FLAGS);

@@ -146,6 +146,11 @@ public:
         return accessBlock( addr, lat, context_src, 0 );
     }
     BlkType* accessBlock(Addr addr, int &lat, int context_src, uint64_t tid);
+	
+	virtual BlkType* accessBlock(Addr addr, int &lat, int context_src, uint64_t readLabel, uint64_t writeLabel)
+	{
+		return NULL;
+	}
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -158,6 +163,10 @@ public:
         return findBlock( addr, 0 );
     }
     BlkType* findBlock(Addr addr, uint64_t tid);
+	
+	virtual BlkType* findBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel){ return NULL;}
+	
+	virtual uint64_t locateBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel){ return 0;}
 
     /**
      * Find a block to evict for the address provided.

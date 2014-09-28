@@ -63,3 +63,129 @@ DCLRU::init_sets(){
     }
 }
 
+DCLRU::BlkType* 
+DCLRU::findBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel) {
+    Addr tag = extractTag(addr);
+    unsigned set = extractSet(addr);
+	
+	// (L, L)
+	if (readLabel == 0 && writeLabel == 0)
+	{
+		BlkType *blk_L = get_set(set, 0, addr).findBlk(tag);
+		BlkType *blk_H = get_set(set, 1, addr).findBlk(tag);
+		
+		// cache hit
+		if (blk_L != NULL)
+		{
+			return blk_L;
+		}
+		// fake miss
+		else if (blk_L == NULL && blk_H != NULL)
+		{
+			return NULL;
+		}
+		// real miss
+		else
+		{
+			return NULL;
+		}
+	}
+	// (H, H)
+	else if (readLabel == 1 && writeLabel == 1)
+	{
+		BlkType *blk_L = get_set(set, 0, addr).findBlk(tag);
+		BlkType *blk_H = get_set(set, 1, addr).findBlk(tag);
+		
+		if (blk_L != NULL)
+		{
+			return blk_L;
+		}
+		else
+		{
+			return blk_H;
+		}
+	}
+	// (L, H)
+	else if (readLabel == 0 && writeLabel == 1)
+	{
+		BlkType *blk_L = get_set(set, 0, addr).findBlk(tag);
+		BlkType *blk_H = get_set(set, 1, addr).findBlk(tag);
+		
+		// cache hit
+		if (blk_L != NULL)
+		{
+			return blk_L;
+		}
+		// fake miss
+		else if (blk_L == NULL && blk_H != NULL)
+		{
+			return NULL;
+		}
+		// real miss
+		else
+		{
+			return NULL;
+		}
+	}
+	// (H, L)
+	else
+	{
+		BlkType *blk_L = get_set(set, 0, addr).findBlk(tag);
+		BlkType *blk_H = get_set(set, 1, addr).findBlk(tag);
+		
+		if (blk_L != NULL)
+		{
+			return blk_L;
+		}
+		else
+		{
+			return blk_H;
+		}		
+	}
+}
+
+uint64_t
+DCLRU::locateBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel)
+{
+    Addr tag = extractTag(addr);
+    unsigned set = extractSet(addr);
+	
+	if (readLabel == 1)
+	{
+		BlkType *blk_L = get_set(set, 0, addr).findBlk(tag);
+		
+		if (blk_L != NULL)
+		{
+			return 0;
+		}
+		else
+		{
+			return 1;
+		}
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+DCLRU::BlkType*
+DCLRU::accessBlock(Addr addr, int &lat, int master_id, uint64_t readLabel, uint64_t writeLabel)
+{
+    unsigned set = extractSet(addr);
+    // BlkType *blk = sets[set].findBlk(tag);
+    BlkType *blk = findBlock(addr, readLabel, writeLabel);
+    lat = hitLatency;
+    if (blk != 0 ) {
+        // move this block to head of the MRU list
+		uint64_t locBlk = locateBlock(addr, readLabel, writeLabel);
+        get_set(set,locBlk,addr).moveToHead(blk);
+        if (blk->whenReady > curTick()
+            && blk->whenReady - curTick() > hitLatency) {
+            lat = blk->whenReady - curTick();
+        }
+        blk->refCount += 1;
+    }
+
+    return blk;
+}
