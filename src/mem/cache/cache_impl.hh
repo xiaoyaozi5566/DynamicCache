@@ -2153,7 +2153,186 @@ template<class TagStore>
 void
 DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
 {
+    Tick time = curTick() + this->hitLatency;
+    MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+    bool is_error = pkt->isError();
 
+    assert(mshr);
+
+    //printf("handle response %llx @ cycle %llu\n", pkt->getAddr(), curTick());
+	if (is_error) {
+        DPRINTF(Cache, "Cache received packet with error for address %x, "
+                "cmd: %s\n", pkt->getAddr(), pkt->cmdString());
+    }
+
+    DPRINTF(Cache, "Handling response to %x\n", pkt->getAddr());
+
+    MSHRQueue *mq = mshr->queue;
+    bool wasFull = mq->isFull();
+
+    if (mshr == this->noTargetMSHR) {
+        // we always clear at least one target
+        this->clearBlocked(this->Blocked_NoTargets);
+        this->noTargetMSHR = NULL;
+    }
+
+    // Initial target is used just for stats
+    MSHR::Target *initial_tgt = mshr->getTarget();
+    BlkType *blk = this->tags->findBlock( pkt->getAddr(), pkt->readLabel, pkt->writeLabel );
+    int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
+    Tick miss_latency = curTick() - initial_tgt->recvTime;
+    PacketList writebacks;
+
+    if (pkt->req->isUncacheable()) {
+        assert(pkt->req->masterId() < system->maxMasters());
+        this->mshr_uncacheable_lat[stats_cmd_idx][pkt->req->masterId()] +=
+            miss_latency;
+    } else {
+        assert(pkt->req->masterId() < system->maxMasters());
+        this->mshr_miss_latency[stats_cmd_idx][pkt->req->masterId()] +=
+            miss_latency;
+    }
+
+    bool is_fill = !mshr->isForward &&
+        (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
+
+    if (is_fill && !is_error) {
+        DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
+                pkt->getAddr());
+
+        // give mshr a chance to do some dirty work
+        mshr->handleFill(pkt, blk);
+
+        blk = this->handleFill(pkt, blk, writebacks);
+        assert(blk != NULL);
+    }
+
+    // First offset for critical word first calculations
+    int initial_offset = 0;
+
+    if (mshr->hasTargets()) {
+        initial_offset = mshr->getTarget()->pkt->getOffset(this->blkSize);
+    }
+
+    while (mshr->hasTargets()) {
+        MSHR::Target *target = mshr->getTarget();
+
+        switch (target->source) {
+          case MSHR::Target::FromCPU:
+            Tick completion_time;
+            if (is_fill) {
+                this->satisfyCpuSideRequest(target->pkt, blk,
+                                      true, mshr->hasPostDowngrade());
+                // How many bytes past the first request is this one
+                int transfer_offset =
+                    target->pkt->getOffset(this->blkSize) - initial_offset;
+                if (transfer_offset < 0) {
+                    transfer_offset += this->blkSize;
+                }
+
+                // If critical word (no offset) return first word time
+                completion_time = this->tags->getHitLatency() + ( transfer_offset ?
+                  pkt->finishTime :
+                  pkt->getFirstWordTime(this->params->cw_first) );
+
+                assert(!target->pkt->req->isUncacheable());
+
+                assert(target->pkt->req->masterId() < system->maxMasters());
+                this->missLatency[target->pkt->cmdToIndex()][target->pkt->req->masterId()] +=
+                    completion_time - target->recvTime;
+            } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
+                // failed StoreCond upgrade
+                assert(target->pkt->cmd == MemCmd::StoreCondReq ||
+                       target->pkt->cmd == MemCmd::StoreCondFailReq ||
+                       target->pkt->cmd == MemCmd::SCUpgradeFailReq);
+                completion_time = this->tags->getHitLatency() + pkt->finishTime;
+                target->pkt->req->setExtraData(0);
+            } else {
+                // not a cache fill, just forwarding response
+                completion_time = this->tags->getHitLatency() + pkt->finishTime;
+                if (pkt->isRead() && !is_error) {
+                    target->pkt->setData(pkt->getPtr<uint8_t>());
+                }
+            }
+            target->pkt->makeTimingResponse();
+            // if this packet is an error copy that to the new packet
+            if (is_error)
+                target->pkt->copyError(pkt);
+            if (target->pkt->cmd == MemCmd::ReadResp &&
+                (pkt->isInvalidate() || mshr->hasPostInvalidate())) {
+                // If intermediate cache got ReadRespWithInvalidate,
+                // propagate that.  Response should not have
+                // isInvalidate() set otherwise.
+                target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
+            }
+	    this->cpuSidePort->schedTimingResp(target->pkt, completion_time, target->pkt->threadID);
+            break;
+
+          case MSHR::Target::FromPrefetcher:
+            assert(target->pkt->cmd == MemCmd::HardPFReq);
+            if (blk)
+                blk->status |= BlkHWPrefetched;
+            delete target->pkt->req;
+            delete target->pkt;
+            break;
+
+          case MSHR::Target::FromSnoop:
+            // I don't believe that a snoop can be in an error state
+            assert(!is_error);
+            // response to snoop request
+            DPRINTF(Cache, "processing deferred snoop...\n");
+            assert(!(pkt->isInvalidate() && !mshr->hasPostInvalidate()));
+            this->handleSnoop(target->pkt, blk, true, true,
+                        mshr->hasPostInvalidate());
+            break;
+
+          default:
+            panic("Illegal target->source enum %d\n", target->source);
+        }
+
+        mshr->popTarget();
+    }
+
+    if (blk) {
+        if (pkt->isInvalidate() || mshr->hasPostInvalidate()) {
+            this->tags->invalidateBlk( blk, pkt->writeLabel );
+        } else if (mshr->hasPostDowngrade()) {
+            blk->status &= ~BlkWritable;
+        }
+    }
+
+    if (mshr->promoteDeferredTargets()) {
+        // avoid later read getting stale data while write miss is
+        // outstanding.. see comment in timingAccess()
+        if (blk) {
+            blk->status &= ~BlkReadable;
+        }
+        MSHRQueue *mq = mshr->queue;
+        mq->markPending(mshr);
+        this->requestMemSideBus((BaseCache::RequestCause)mq->index, pkt->finishTime, pkt->threadID);
+    } else {
+        mq->deallocate(mshr);
+        if (wasFull && !mq->isFull()) {
+            this->clearBlocked((BaseCache::BlockedCause)mq->index);
+        }
+    }
+
+    // copy writebacks to write buffer
+    while (!writebacks.empty()) {
+        PacketPtr wbPkt = writebacks.front();
+        this->allocateWriteBuffer(wbPkt, time, true);
+        writebacks.pop_front();
+    }
+    // if we used temp block, clear it out
+    if (blk == this->tempBlock) {
+        if (blk->isDirty()) {
+            this->allocateWriteBuffer(this->writebackBlk(blk, pkt->threadID), time, true);
+        }
+        blk->status &= ~BlkValid;
+        this->tags->invalidateBlk( blk, pkt->writeLabel );
+    }
+
+    delete pkt;
 }
 
 template<class TagStore>
