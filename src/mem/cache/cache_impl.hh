@@ -2153,7 +2153,7 @@ template<class TagStore>
 void
 DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
 {
-	return;
+
 }
 
 template<class TagStore>
@@ -2163,12 +2163,13 @@ DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
 {
     Addr addr = pkt->getAddr();
 	bool fake_miss = false;
+	BlkType *blk_H = NULL;
 
     if (blk == NULL) {
         // better have read new data...
         assert(pkt->hasData());
 		// Yao: check if it's fake miss
-		BlkType *blk_H = this->tags->findBlock( pkt->getAddr(), 1, 1 );
+		blk_H = this->tags->findBlock( pkt->getAddr(), 1, 1 );
 		fake_miss = (blk_H != NULL);
         // need to do a replacement
         blk = this->allocateBlock(addr, writebacks, pkt->writeLabel);
@@ -2217,8 +2218,11 @@ DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
 
     // if we got new data, copy it in
     if (pkt->isRead()) {
-        if (fake_miss)
-			std::memcpy(blk->data, blk->data, this->blkSize);
+        if (fake_miss) {
+        	// Yao: for fake miss, move data from high to low, invalidate high copy
+			std::memcpy(blk->data, blk_H->data, this->blkSize);
+			this->tags->invalidateBlk( blk_H, 1 );
+        }			
 		else
 			std::memcpy(blk->data, pkt->getPtr<uint8_t>(), this->blkSize);
     }
