@@ -1961,7 +1961,192 @@ template<class TagStore>
 bool
 DirtyCache<TagStore>::timingAccess(PacketPtr pkt)
 {
-	return true;
+//@todo Add back in MemDebug Calls
+//    MemDebug::cacheAccess(pkt);
+
+
+    /// @todo temporary hack to deal with memory corruption issue until
+    /// 4-phase transactions are complete
+    for (int x = 0; x < this->pendingDelete.size(); x++)
+        delete this->pendingDelete[x];
+    this->pendingDelete.clear();
+
+    // we charge hitLatency for doing just about anything here
+    Tick time =  curTick() + this->hitLatency;
+
+    if (pkt->isResponse()) {
+        // must be cache-to-cache response from upper to lower level
+        ForwardResponseRecord *rec =
+            dynamic_cast<ForwardResponseRecord *>(pkt->senderState);
+
+        if (rec == NULL) {
+            assert(pkt->cmd == MemCmd::HardPFResp);
+            // Check if it's a prefetch response and handle it. We shouldn't
+            // get any other kinds of responses without FRRs.
+            DPRINTF(Cache, "Got prefetch response from above for addr %#x\n",
+                    pkt->getAddr());
+            this->handleResponse(pkt);
+            return true;
+        }
+
+        rec->restore(pkt, this);
+        delete rec;
+        this->memSidePort->schedTimingSnoopResp(pkt, time);
+
+        return true;
+    }
+
+    assert(pkt->isRequest());
+
+    if (pkt->memInhibitAsserted()) {
+        DPRINTF(Cache, "mem inhibited on 0x%x: not responding\n",
+                pkt->getAddr());
+        assert(!pkt->req->isUncacheable());
+        // Special tweak for multilevel coherence: snoop downward here
+        // on invalidates since there may be other caches below here
+        // that have shared copies.  Not necessary if we know that
+        // supplier had exclusive copy to begin with.
+        if (pkt->needsExclusive() && !pkt->isSupplyExclusive()) {
+            Packet *snoopPkt = new Packet(pkt, true);  // clear flags
+            snoopPkt->setExpressSnoop();
+            snoopPkt->assertMemInhibit();
+            this->memSidePort->sendTimingReq(snoopPkt);
+            // main memory will delete snoopPkt
+        }
+        // since we're the official target but we aren't responding,
+        // delete the packet now.
+
+        /// @todo nominally we should just delete the packet here,
+        /// however, until 4-phase stuff we can't because sending
+        /// cache is still relying on it
+        this->pendingDelete.push_back(pkt);
+        return true;
+    }
+
+    if (pkt->req->isUncacheable()) {
+        if (pkt->req->isClearLL()) {
+            this->tags->clearLocks();
+        } else if (pkt->isWrite()) {
+            BlkType *blk = this->tags->findBlock( pkt->getAddr(), pkt->readLabel, pkt->writeLabel );
+            if (blk != NULL) {
+				uint64_t locBlock = this->tags->locateBlock( pkt->getAddr(), pkt->readLabel, pkt->writeLabel );
+                this->tags->invalidateBlk( blk, locBlock );
+            }
+        }
+
+        // writes go in write buffer, reads use MSHR
+        if (pkt->isWrite() && !pkt->isRead()) {
+			// Yao: threadID should be consistent with readlabel
+            this->allocateWriteBuffer(pkt, time, true);
+        } else {
+            this->allocateUncachedReadBuffer(pkt, time, true);
+        }
+        assert(pkt->needsResponse()); // else we should delete it here??
+        return true;
+    }
+
+    int lat = this->hitLatency;
+    BlkType *blk = NULL;
+    PacketList writebacks;
+
+    bool satisfied = this->access(pkt, blk, lat, writebacks);
+
+    // track time of availability of next prefetch, if any
+    Tick next_pf_time = 0;
+
+    bool needsResponse = pkt->needsResponse();
+
+    if (satisfied) {
+        if (this->prefetcher && (this->prefetchOnAccess || (blk && blk->wasPrefetched()))) {
+            if (blk)
+                blk->status &= ~BlkHWPrefetched;
+            next_pf_time = this->prefetcher->notify(pkt, time);
+        }
+
+        if (needsResponse) {
+            pkt->makeTimingResponse();
+            this->cpuSidePort->schedTimingResp(pkt, curTick()+lat, pkt->threadID);
+        } else {
+            /// @todo nominally we should just delete the packet here,
+            /// however, until 4-phase stuff we can't because sending
+            /// cache is still relying on it
+            this->pendingDelete.push_back(pkt);
+        }
+    } else {
+        // miss
+
+        Addr blk_addr = this->blockAlign(pkt->getAddr());
+        MSHR *mshr = this->getMSHRQueue( pkt->threadID )->findMatch( blk_addr );
+
+        if (mshr) {
+            // MSHR hit
+            //@todo remove hw_pf here
+            assert(pkt->req->masterId() < system->maxMasters());
+            this->mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
+            if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
+                mshr->threadNum = -1;
+            }
+
+            mshr->allocateTarget(pkt, time, this->order++);
+            if (mshr->getNumTargets() == this->numTarget) {
+                this->noTargetMSHR = mshr;
+                this->setBlocked(this->Blocked_NoTargets);
+                // need to be careful with this... if this mshr isn't
+                // ready yet (i.e. time > curTick()_, we don't want to
+                // move it ahead of mshrs that are ready
+                // mshrQueue.moveToFront(mshr);
+            }
+        } else {
+            // no MSHR
+            assert(pkt->req->masterId() < system->maxMasters());
+            this->mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
+            // always mark as cache fill for now... if we implement
+            // no-write-allocate or bypass accesses this will have to
+            // be changed.
+            if (pkt->cmd == MemCmd::Writeback) {
+                this->allocateWriteBuffer(pkt, time, true);
+            } else {
+                if (blk && blk->isValid()) {
+                    // If we have a write miss to a valid block, we
+                    // need to mark the block non-readable.  Otherwise
+                    // if we allow reads while there's an outstanding
+                    // write miss, the read could return stale data
+                    // out of the cache block... a more aggressive
+                    // system could detect the overlap (if any) and
+                    // forward data out of the MSHRs, but we don't do
+                    // that yet.  Note that we do need to leave the
+                    // block valid so that it stays in the cache, in
+                    // case we get an upgrade response (and hence no
+                    // new data) when the write miss completes.
+                    // As long as CPUs do proper store/load forwarding
+                    // internally, and have a sufficiently weak memory
+                    // model, this is probably unnecessary, but at some
+                    // point it must have seemed like we needed it...
+                    assert(pkt->needsExclusive() && !blk->isWritable());
+                    blk->status &= ~BlkReadable;
+                }
+
+                //printf("store miss %llx from thread %llu to MSHR @ cycle %llu\n", pkt->getAddr(), pkt->threadID, time);
+                this->allocateMissBuffer(pkt, time, true);
+            }
+
+            if (this->prefetcher) {
+                next_pf_time = this->prefetcher->notify(pkt, time);
+            }
+        }
+    }
+
+    if (next_pf_time != 0)
+        this->requestMemSideBus(this->Request_PF, std::max(time, next_pf_time), pkt->threadID);
+
+    // copy writebacks to write buffer
+    while (!writebacks.empty()) {
+        PacketPtr wbPkt = writebacks.front();
+        this->allocateWriteBuffer(wbPkt, time, true);
+        writebacks.pop_front();
+    }
+
+    return true;
 }
 
 template<class TagStore>
