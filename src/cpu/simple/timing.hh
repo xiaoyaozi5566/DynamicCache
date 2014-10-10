@@ -30,6 +30,8 @@
 
 #ifndef __CPU_SIMPLE_TIMING_HH__
 #define __CPU_SIMPLE_TIMING_HH__
+#define SET_LABEL_L 0x80000000
+#define SET_LABEL_H 0x80000001
 
 #include "cpu/simple/base.hh"
 #include "cpu/translation.hh"

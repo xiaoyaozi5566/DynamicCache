@@ -407,7 +407,17 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
         traceData->setAddr(addr);
     }
 
-    RequestPtr req  = new Request(asid, addr, size,
+    if ( addr == SET_LABEL_L ) {
+    	printf("Set label as L\n");
+		return NoFault;
+    }
+	
+	if ( addr == SET_LABEL_H ) {
+		printf("Set label as H\n");
+		return NoFault;
+	}
+	
+	RequestPtr req  = new Request(asid, addr, size,
                                   flags, dataMasterId(), pc, _cpuId, tid);
 
     Addr split_addr = roundDown(addr + size - 1, block_size);
