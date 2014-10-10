@@ -15,10 +15,14 @@ int main() {
 	i = *set_label_h;
 	
 	for (i = 0; i < 1000; i++) buffer[i] = i;
+	
+	printf("finish setting H label!\n");
 
 	i = *set_label_l;
 	
 	for (i = 0; i < 1000; i++) buffer[i] = -i;
+	
+	printf("finish setting L label!\n");
 	
 	return 0;
 }
