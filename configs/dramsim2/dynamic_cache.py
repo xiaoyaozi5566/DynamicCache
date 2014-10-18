@@ -84,6 +84,7 @@ def get_processes(options):
     for wrkld in workloads:
         process = LiveProcess()
         process.executable = wrkld
+        process.pid = 0
 
         if len(pargs) > idx:
             process.cmd = [wrkld] + [" "] + [pargs[idx]]
@@ -110,6 +111,8 @@ def get_processes(options):
 parser = optparse.OptionParser()
 Options.addCommonOptions(parser)
 Options.addSEOptions(parser)
+
+parser.add_option("--dirty_cache", action="store_true")
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)

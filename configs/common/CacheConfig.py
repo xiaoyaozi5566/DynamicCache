@@ -130,10 +130,12 @@ def config_cache(options, system):
         if options.caches:
             icache = L1Cache(size = options.l1i_size,
                              assoc = options.l1i_assoc,
-                             block_size=options.cacheline_size)
+                             block_size=options.cacheline_size,
+                             dirty_cache=options.dirty_cache)
             dcache = L1Cache(size = options.l1d_size,
                              assoc = options.l1d_assoc,
-                             block_size=options.cacheline_size)
+                             block_size=options.cacheline_size,
+                             dirty_cache=options.dirty_cache)
 
             if buildEnv['TARGET_ISA'] == 'x86':
                 system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
@@ -150,7 +152,8 @@ def config_cache(options, system):
             L2Cache(
                 size = options.l2_size,
                 assoc = options.l2_assoc,
-                block_size=options.cacheline_size
+                block_size=options.cacheline_size,
+                dirty_cache=options.dirty_cache
             )
             for i in xrange( options.num_cpus )
         ]
