@@ -1833,7 +1833,7 @@ Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                          const std::string &_label)
     : BaseCache::CacheMasterPort(_name, _cache, _queue),
-      _queue(*_cache, *this, _label, 5), cache(_cache)
+      _queue(*_cache, *this, _label, 0), cache(_cache)
 {}
 
 //-----------------------------------------------------------------------------
