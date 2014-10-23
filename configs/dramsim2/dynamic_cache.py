@@ -168,7 +168,7 @@ if options.smt and options.num_cpus > 1:
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = SimpleMemory(range=AddrRange("512MB")),
-                membus = CoherentBus(), mem_mode = test_mem_mode)
+                membus = NoncoherentBus(), mem_mode = test_mem_mode)
 
 # Sanity check
 if options.fastmem and (options.caches or options.l2cache):
