@@ -65,7 +65,7 @@ PacketQueue::retry()
     DPRINTF(PacketQueue, "Queue %s received retry\n", name());
     //assert(waitingOnRetry);
     //printf("Queue %s received retry @ %llu\n", name().c_str(), curTick());
-	sendDeferredPacket();
+	if(deferredPacketReady()) sendDeferredPacket();
 }
 
 bool
@@ -104,7 +104,7 @@ PacketQueue::schedSendEvent(Tick when, bool isInteresting)
     //        when, curTick() );
     // }
   
-    //printf("schedule send Event @ cycle %llu\n", when);
+    //printf("%d schedule send Event @ cycle %llu\n", ID, when);
 	  //if (sendEvent.scheduled()) printf("Event scheduled @ cycle %llu\n", when);
 	  if (!sendEvent.scheduled()) {
         // if( isEra() ) printf("schedSendEvent at %lu\n",when);

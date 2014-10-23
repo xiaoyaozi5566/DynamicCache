@@ -1833,7 +1833,7 @@ Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                          const std::string &_label)
     : BaseCache::CacheMasterPort(_name, _cache, _queue),
-      _queue(*_cache, *this, _label, 0), cache(_cache)
+      _queue(*_cache, *this, _label, 5), cache(_cache)
 {}
 
 //-----------------------------------------------------------------------------
@@ -1921,7 +1921,7 @@ DirtyCache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     // into the cache without having a writeable copy (or any copy at
     // all).
     if (pkt->cmd == MemCmd::Writeback) {
-        assert(blkSize == pkt->getSize());
+        assert(this->blkSize == pkt->getSize());
         if (blk == NULL) {
             // need to do a replacement
             blk = this->allocateBlock(pkt->getAddr(), writebacks, pkt->writeLabel);
@@ -2081,7 +2081,7 @@ DirtyCache<TagStore>::timingAccess(PacketPtr pkt)
         if (mshr) {
             // MSHR hit
             //@todo remove hw_pf here
-            assert(pkt->req->masterId() < system->maxMasters());
+            assert(pkt->req->masterId() < this->system->maxMasters());
             this->mshr_hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
             if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
                 mshr->threadNum = -1;
@@ -2098,7 +2098,7 @@ DirtyCache<TagStore>::timingAccess(PacketPtr pkt)
             }
         } else {
             // no MSHR
-            assert(pkt->req->masterId() < system->maxMasters());
+            assert(pkt->req->masterId() < this->system->maxMasters());
             this->mshr_misses[pkt->cmdToIndex()][pkt->req->masterId()]++;
             // always mark as cache fill for now... if we implement
             // no-write-allocate or bypass accesses this will have to
@@ -2184,11 +2184,11 @@ DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
     PacketList writebacks;
 
     if (pkt->req->isUncacheable()) {
-        assert(pkt->req->masterId() < system->maxMasters());
+        assert(pkt->req->masterId() < this->system->maxMasters());
         this->mshr_uncacheable_lat[stats_cmd_idx][pkt->req->masterId()] +=
             miss_latency;
     } else {
-        assert(pkt->req->masterId() < system->maxMasters());
+        assert(pkt->req->masterId() < this->system->maxMasters());
         this->mshr_miss_latency[stats_cmd_idx][pkt->req->masterId()] +=
             miss_latency;
     }
@@ -2237,7 +2237,7 @@ DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
 
                 assert(!target->pkt->req->isUncacheable());
 
-                assert(target->pkt->req->masterId() < system->maxMasters());
+                assert(target->pkt->req->masterId() < this->system->maxMasters());
                 this->missLatency[target->pkt->cmdToIndex()][target->pkt->req->masterId()] +=
                     completion_time - target->recvTime;
             } else if (pkt->cmd == MemCmd::UpgradeFailResp) {
@@ -2355,7 +2355,7 @@ DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         if (blk == NULL) {
             // No replaceable block... just use temporary storage to
             // complete the current request and then get rid of it
-            assert(!tempBlock->isValid());
+            assert(!this->tempBlock->isValid());
             blk = this->tempBlock;
             this->tempBlock->set = this->tags->extractSet(addr);
             this->tempBlock->tag = this->tags->extractTag(addr);
@@ -2369,7 +2369,7 @@ DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         blk->status = 0;
     } else {
         // existing block... probably an upgrade
-        assert(blk->tag == tags->extractTag(addr));
+        assert(blk->tag == this->tags->extractTag(addr));
         // either we're getting new data or the block should already be valid
         assert(pkt->hasData() || blk->isValid());
         // don't clear block status... if block is already dirty we
@@ -2392,8 +2392,8 @@ DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             blk->status |= BlkDirty;
     }
 
-    DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
-            addr, old_state, blk->status);
+    // DPRINTF(Cache, "Block addr %x moving from state %i to %i\n",
+    //         addr, old_state, blk->status);
 
     // if we got new data, copy it in
     if (pkt->isRead()) {

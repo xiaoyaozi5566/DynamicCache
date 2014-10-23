@@ -20,9 +20,14 @@ class SplitMSHRCache : public Cache<TagStore>
     class SplitMemSidePort : public Cache<TagStore>::MemSidePort{
         private:
         MasterPacketQueue** reqQueues;
+		int num_tcs;
 
         public:
-        virtual void recvRetry( int threadID ){
+		virtual void recvRetry(){
+            for( int i=0; i < num_tcs; i++) recvRetry(i);
+        }
+			
+		virtual void recvRetry( int threadID ){
             this->reqQueues[threadID]->retry();
         }
 
@@ -44,6 +49,7 @@ class SplitMSHRCache : public Cache<TagStore>
         SplitMemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                     const std::string &_label) :
           Cache<TagStore>::MemSidePort( _name, _cache, _label ){
+		  num_tcs = _cache->params->num_tcs;
           this->reqQueues = new MasterPacketQueue*[_cache->params->num_tcs];
           for( int i=0; i < (_cache->params->num_tcs); i++){
             this->reqQueues[i] = new MemSidePacketQueue(
@@ -54,7 +60,7 @@ class SplitMSHRCache : public Cache<TagStore>
 
 
     virtual MSHRQueue* getMSHRQueue( int threadID ){
-        return mshrQueues[threadID];
+		return mshrQueues[threadID];
     }
     virtual MSHRQueue* getWriteBuffer( int threadID ){
         return writeBuffers[threadID];
