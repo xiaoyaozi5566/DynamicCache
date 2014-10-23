@@ -65,7 +65,7 @@ PacketQueue::retry()
     DPRINTF(PacketQueue, "Queue %s received retry\n", name());
     //assert(waitingOnRetry);
     //printf("Queue %s received retry @ %llu\n", name().c_str(), curTick());
-	if(deferredPacketReady()) sendDeferredPacket();
+	sendDeferredPacket();
 }
 
 bool
@@ -223,7 +223,9 @@ PacketQueue::sendDeferredPacket()
 {
     // try to send what is on the list, this will set waitingOnRetry
     // accordingly
-    trySendTiming();
+    if (!deferredPacketReady()) return;
+	
+	trySendTiming();
 
     // if we succeeded and are not waiting for a retry, schedule the
     // next send
