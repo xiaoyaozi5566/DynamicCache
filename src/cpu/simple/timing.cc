@@ -409,13 +409,11 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
 
     if ( addr == SET_LABEL_L ) {
 		thread->getProcessPtr()->__pid = 0;
-    	printf("Set label as L\n");
 		return NoFault;
     }
 	
 	if ( addr == SET_LABEL_H ) {
 		thread->getProcessPtr()->__pid = 1;
-		printf("Set label as H\n");
 		return NoFault;
 	}
 	
