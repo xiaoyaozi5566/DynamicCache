@@ -62,6 +62,7 @@
 #include "mem/cache/split_mshr_cache.hh"
 #include "mem/cache/split_rport_cache.hh"
 #include "mem/cache/dirty_cache.hh"
+#include "mem/cache/dynamic_cache.hh"
 #include "sim/sim_exit.hh"
 
 template<class TagStore>
@@ -2409,4 +2410,10 @@ DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
     blk->whenReady = pkt->finishTime;
 
     return blk;
+}
+
+template<class TagStore>
+DynamicCache<TagStore>::DynamicCache( const Params *p, TagStore *tags )
+    : SplitRPortCache<TagStore>( p, tags )
+{
 }

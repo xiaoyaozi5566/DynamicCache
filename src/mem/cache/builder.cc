@@ -41,6 +41,7 @@
 #include "mem/cache/split_mshr_cache.hh"
 #include "mem/cache/split_rport_cache.hh"
 #include "mem/cache/dirty_cache.hh"
+#include "mem/cache/dynamic_cache.hh"
 #include "mem/cache/cache.hh"
 #include "mem/config/cache.hh"
 #include "params/BaseCache.hh"
@@ -51,6 +52,7 @@
 #include "mem/cache/tags/splru.hh"
 #include "mem/cache/tags/wplru.hh"
 #include "mem/cache/tags/dclru.hh"
+#include "mem/cache/tags/dynalru.hh"
 #endif
 
 #if defined(USE_CACHE_FALRU)
@@ -73,6 +75,8 @@ using namespace std;
             retval = new SplitMSHRCache<TAGS>(this, tags);    \
         else if( dirty_cache )                                \
             retval = new DirtyCache<TAGS>(this, tags);        \
+        else if( dynamic_cache )                                \
+            retval = new DynamicCache<TAGS>(this, tags);        \
         else                                                  \
             retval = new Cache<TAGS>(this, tags);             \
         return retval;                                        \
@@ -94,7 +98,9 @@ using namespace std;
 #if defined(USE_CACHE_LRU)
 #define BUILD_LRU_CACHE do {                                            \
         LRU *tags;                                                      \
-		if( dirty_cache )                                              \
+		if( dynamic_cache )                                              \
+			tags = new DYNALRU( numSets, block_size, assoc, latency ); \
+		else if( dirty_cache )                                              \
 			tags = new DCLRU( numSets, block_size, assoc, latency ); \
         else if( use_way_part )                                              \
             tags = new WPLRU( numSets, block_size, assoc, latency, num_tcs ); \
