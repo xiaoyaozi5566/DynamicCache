@@ -1870,6 +1870,18 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
                                   "CpuSidePort");
 }
 
+//-----------------------------------------------------------------------------
+// Dynamic Cache
+//-----------------------------------------------------------------------------
+template<class TagStore>
+DynamicCache<TagStore>::DynamicCache( const Params *p, TagStore *tags )
+    : SplitRPortCache<TagStore>( p, tags )
+{
+}
+
+//-----------------------------------------------------------------------------
+// Dirty Cache
+//-----------------------------------------------------------------------------
 template<class TagStore>
 DirtyCache<TagStore>::DirtyCache( const Params *p, TagStore *tags )
     : SplitRPortCache<TagStore>( p, tags )
@@ -2410,10 +2422,4 @@ DirtyCache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
     blk->whenReady = pkt->finishTime;
 
     return blk;
-}
-
-template<class TagStore>
-DynamicCache<TagStore>::DynamicCache( const Params *p, TagStore *tags )
-    : SplitRPortCache<TagStore>( p, tags )
-{
 }
