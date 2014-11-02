@@ -148,23 +148,26 @@ def config_cache(options, system):
     #-------------------------------------------------------------------------
     # L2
     #-------------------------------------------------------------------------
-    system.l2 = [
-            L2Cache(
+    system.l2 = L2Cache(
                 size = options.l2_size,
                 assoc = options.l2_assoc,
                 block_size=options.cacheline_size,
-                dirty_cache=options.dirty_cache
+                dirty_cache=options.dirty_cache,
+                dynamic_cache=options.dynamic_cache
             )
-            for i in xrange( options.num_cpus )
-        ]
-    system.tol2bus = [NoncoherentBus() for i in xrange( options.num_cpus )]
+            #for i in xrange( options.num_cpus )
+            
+    #system.tol2bus = [NoncoherentBus() for i in xrange( options.num_cpus )]
+    system.tol2bus = NoncoherentBus()
+    system.l2.cpu_side = system.tol2bus.master
+    system.l2.mem_side = system.membus.slave
 
     for i in xrange(options.num_cpus):
         if options.l2cache:
-            system.cpu[i].connectAllPorts(system.tol2bus[i])
-            system.l2[i].cpu_side = system.tol2bus[i].master
-            if not options.l3cache:
-                system.l2[i].mem_side = system.membus.slave
+            system.cpu[i].connectAllPorts(system.tol2bus)
+            #system.l2.cpu_side = system.tol2bus.master
+            #if not options.l3cache:
+                #system.l2.mem_side = system.membus.slave
         else:
             system.cpu[i].connectAllPorts(system.membus)
 

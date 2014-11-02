@@ -570,7 +570,7 @@ class BaseCache : public MemObject
 
     virtual bool inMissQueue(Addr addr) = 0;
 
-    void incMissCount(PacketPtr pkt)
+    virtual void incMissCount(PacketPtr pkt)
     {
         assert(pkt->req->masterId() < system->maxMasters());
         misses[pkt->cmdToIndex()][pkt->req->masterId()]++;

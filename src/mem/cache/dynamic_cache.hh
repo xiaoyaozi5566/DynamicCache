@@ -15,6 +15,19 @@ class DynamicCache : public SplitRPortCache<TagStore>
     /** A typedef for a list of BlkType pointers. */
     typedef typename TagStore::BlkList BlkList;
 	
+protected:
+	virtual void incMissCount(PacketPtr pkt)
+	{
+		missCount++;
+	}
+	
+	void adjustPartition();
+	
+	EventWrapper<DynamicCache<TagStore>, &DynamicCache<TagStore>::adjustPartition> adjustEvent;
+	
+private:
+	// Low partition missCount
+	uint64_t missCount;
 	// protected:
 	//     virtual bool access(PacketPtr pkt, BlkType *&blk,
 	//                 int &lat, PacketList &writebacks);

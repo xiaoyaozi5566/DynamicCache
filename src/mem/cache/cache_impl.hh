@@ -1875,8 +1875,19 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
 //-----------------------------------------------------------------------------
 template<class TagStore>
 DynamicCache<TagStore>::DynamicCache( const Params *p, TagStore *tags )
-    : SplitRPortCache<TagStore>( p, tags )
+    : SplitRPortCache<TagStore>( p, tags ), adjustEvent(this)
 {
+	printf("create dynamic cache!\n");
+	missCount = 0;
+	this->schedule(adjustEvent, 500000000);
+}
+
+template<class TagStore>
+void
+DynamicCache<TagStore>::adjustPartition()
+{
+	printf("change partition at cycle %llu\n", curTick());
+	this->schedule(adjustEvent, curTick()+500000000);
 }
 
 //-----------------------------------------------------------------------------
