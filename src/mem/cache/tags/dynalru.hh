@@ -3,7 +3,9 @@
 #include "mem/cache/tags/lru.hh"
 
 class DYNALRU : public LRU{
-    private:
+private:
+		unsigned L_assoc;
+		unsigned H_assoc;
 
     public:
     DYNALRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
@@ -16,4 +18,8 @@ class DYNALRU : public LRU{
     // virtual void cleanupRefs();
 
     virtual int assoc_of_tc( int tcid );
+	
+	virtual void inc_size();
+	virtual unsigned dec_size();
+	virtual BlkType* check_dirty(unsigned index);
 };

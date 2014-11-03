@@ -201,6 +201,12 @@ public:
     virtual int assoc_of_tc( int tcid ){ return assoc; }
 
     virtual void init_sets();
+	
+	virtual void inc_size(){};
+	
+	virtual unsigned dec_size(){printf("called incorrect dec_size()\n"); return 0;};
+	
+	virtual BlkType* check_dirty(unsigned index){return NULL;};
 
     /**
      * Generate the tag from the given address.

@@ -444,6 +444,12 @@ class IIC : public BaseTags
     }
 	virtual IICTag* findBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel) const{ return NULL;}
 	virtual uint64_t locateBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel){ return 0;}
+	
+	virtual void inc_size(){};
+	
+	virtual unsigned dec_size(){printf("called incorrect dec_size()\n"); return 0;};
+	
+	virtual BlkType* check_dirty(unsigned index){return NULL;};
 
     /**
      * Find a replacement block for the address provided.

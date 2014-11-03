@@ -1879,7 +1879,10 @@ DynamicCache<TagStore>::DynamicCache( const Params *p, TagStore *tags )
 {
 	printf("create dynamic cache!\n");
 	missCount = 0;
-	this->schedule(adjustEvent, 500000000);
+	interval = 500000000;
+	th_inc = 200;
+	th_dec = 10;
+	this->schedule(adjustEvent, interval);
 }
 
 template<class TagStore>
@@ -1887,7 +1890,28 @@ void
 DynamicCache<TagStore>::adjustPartition()
 {
 	printf("change partition at cycle %llu\n", curTick());
-	this->schedule(adjustEvent, curTick()+500000000);
+	printf("Miss count = %llu\n", missCount);
+	// Change the partition size based on # of misses
+	if(missCount > th_inc) { 
+		printf("increase L partition size\n");
+		this->tags->inc_size();
+	}
+	else if (missCount < th_dec) {
+		printf("decrease L partition size\n");
+		unsigned numSets = this->tags->dec_size();
+		// write back if the block is dirty
+		for(unsigned i = 0; i < numSets; i++){
+			BlkType *tempBlk = this->tags->check_dirty(i);
+			if(tempBlk->isDirty() && tempBlk->isValid())
+				this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
+			else
+				this->tags->invalidateBlk(tempBlk, 1);
+		}
+	}
+	// Reset miss count
+	missCount = 0;
+	// Schedule the next partition size adjust event
+	this->schedule(adjustEvent, curTick()+interval);
 }
 
 //-----------------------------------------------------------------------------

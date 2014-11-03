@@ -3,5 +3,6 @@
 ./build/ARM/gem5.debug configs/dramsim2/dirty_cache.py --cpu-type=timing --dirty_cache --caches --l2cache -c tests/test-progs/test/arm/label_test
 
 ./build/ARM/gem5.debug configs/dramsim2/dynamic_cache.py --cpu-type=timing --dynamic_cache --caches --l2cache \
-    --p0='/Users/yaowang/Desktop/GEM5_DRAMSim2/benchmarks/spec2k6bin/specint/astar /Users/yaowang/Desktop/GEM5_DRAMSim2/benchmarks/spec2k6bin/specint/BigLakes2048.cfg'\
+	--maxinsts=10000000 \
+    --p0='/Users/yaowang/Desktop/GEM5_DRAMSim2/benchmarks/spec2k6bin/specint/mcf /Users/yaowang/Desktop/GEM5_DRAMSim2/benchmarks/spec2k6bin/specint/inp.in'\
     --p1='/Users/yaowang/Desktop/GEM5_DRAMSim2/benchmarks/spec2k6bin/specint/astar /Users/yaowang/Desktop/GEM5_DRAMSim2/benchmarks/spec2k6bin/specint/BigLakes2048.cfg'	
