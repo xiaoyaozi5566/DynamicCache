@@ -71,6 +71,7 @@
 #include "sim/full_system.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
+#include "stdio.h"
 
 class MSHR;
 /**
@@ -290,7 +291,10 @@ class BaseCache : public MemObject
     /** The number of misses to trigger an exit event. */
     Counter missCount;
 
-    /** The drain event. */
+	/** misses per time interval **/
+    uint64_t missCounter;
+	
+	/** The drain event. */
     Event *drainEvent;
 
     /**
@@ -580,13 +584,20 @@ class BaseCache : public MemObject
             if (missCount == 0)
                 exitSimLoop("A cache reached the maximum miss count");
         }
+		
+		missCounter++;
     }
+	
     void incHitCount(PacketPtr pkt)
     {
         assert(pkt->req->masterId() < system->maxMasters());
         hits[pkt->cmdToIndex()][pkt->req->masterId()]++;
 
     }
+	
+	void printMisses();
+	
+	EventWrapper<BaseCache, &BaseCache::printMisses> printEvent;
 
 };
 

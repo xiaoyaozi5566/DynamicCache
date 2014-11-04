@@ -86,11 +86,7 @@ class L3Private( L3Config ):
                     latency = self.latencies[options.l3_size],
                     assoc = options.l3_assoc,
                     block_size = options.cacheline_size,
-                    use_set_part = options.use_set_part,
-                    use_way_part = options.use_way_part,
-                    save_trace = options.do_cache_trace,
-                    cw_first = not (options.nocfw),
-                    l3_trace_file = options.l3tracefile
+                    print_misses = options.print_misses
                 )
                 for i in xrange( options.num_cpus )
             ]
@@ -146,15 +142,13 @@ def config_cache(options, system):
             L2Cache( 
                 size = options.l2_size,
                 assoc = options.l2_assoc,
-                save_trace = options.do_cache_trace,
-                l3_trace_file = options.l2tracefile,
                 block_size=options.cacheline_size 
             ) 
-            for i in xrange( options.numcpus )
+            for i in xrange( options.num_cpus )
         ]
-    system.tol2bus = [NoncoherentBus() for i in xrange( options.numcpus )]
+    system.tol2bus = [NoncoherentBus() for i in xrange( options.num_cpus )]
 
-    for i in xrange(options.numcpus):
+    for i in xrange(options.num_cpus):
         if options.l2cache:
             system.cpu[i].connectAllPorts(system.tol2bus[i])
             system.l2[i].cpu_side = system.tol2bus[i].master

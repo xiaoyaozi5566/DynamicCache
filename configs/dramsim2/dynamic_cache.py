@@ -114,6 +114,7 @@ Options.addSEOptions(parser)
 
 parser.add_option("--dirty_cache", action="store_true")
 parser.add_option("--dynamic_cache", action="store_true")
+parser.add_option("--print_misses", action="store_true")
 parser.add_option("--p0", type="string", 
         help="workload for processor 0."),
 parser.add_option("--p0threadID", type="int", default=0,
@@ -124,7 +125,7 @@ parser.add_option("--p1threadID", type="int", default=1,
         help="timing compartment id for p1")
 parser.add_option("--numpids", type="int", default=2,
         help="determine the number of PIDs")
-parser.add_option("--numcpus", type="int", default=2,
+parser.add_option("--numcpus", type="int",
         help="determine the number of cpus")
 
 if '--ruby' in sys.argv:

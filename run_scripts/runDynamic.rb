@@ -104,6 +104,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    configs/dramsim2/dynamic_cache.py \\")
     script.puts("    --cpu-type=#{cpu} \\")
     script.puts("    --dynamic_cache \\") if scheme == "dc"
+    script.puts("    --print_misses \\") if options[:print_misses]
     script.puts("    --caches \\")
     script.puts("    --l2cache \\")
     unless cacheSize == 0
@@ -188,6 +189,9 @@ def single opts={}
         runmode: :local,
         threads: 4,
         l3config: "private",
+        print_misses: true,
+        fastforward: 0,
+        maxinsts: 10**8,
     }.merge opts
 
     f = []

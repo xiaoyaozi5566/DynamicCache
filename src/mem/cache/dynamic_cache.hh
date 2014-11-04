@@ -18,7 +18,7 @@ class DynamicCache : public SplitRPortCache<TagStore>
 protected:
 	virtual void incMissCount(PacketPtr pkt)
 	{
-		if(pkt->threadID == 0) missCount++;
+		if(pkt->threadID == 0) this->missCounter++;
 	}
 	
 	void adjustPartition();
@@ -26,8 +26,6 @@ protected:
 	EventWrapper<DynamicCache<TagStore>, &DynamicCache<TagStore>::adjustPartition> adjustEvent;
 	
 private:
-	// Low partition missCount
-	uint64_t missCount;
 	// Time interval to change partition size (ticks)
 	uint64_t interval;
 	// Thresholds for changing partition size

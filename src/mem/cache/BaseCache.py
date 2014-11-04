@@ -72,3 +72,4 @@ class BaseCache(MemObject):
     split_mshrq    = Param.Bool(False, "Use MSHR Queue per TC?")
     split_rport    = Param.Bool(False, "Use Split Response Port Queue per TC?")
     cw_first       = Param.Bool(True, "Use critical word first timing")
+    print_misses   = Param.Bool(False, "print the misses")

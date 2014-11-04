@@ -78,9 +78,23 @@ BaseCache::BaseCache(const Params *p)
       missCount(p->max_miss_count),
       drainEvent(NULL),
       addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
-      system(p->system)
+      system(p->system), printEvent(this)
 {
     params = p;
+	missCounter = 0;
+	
+	uint64_t interval = 500000000;
+	if(p->print_misses) schedule(printEvent, interval);
+}
+
+void
+BaseCache::printMisses()
+{
+	printf("@ cycle %llu\n", (unsigned long long)curTick());
+	printf("Miss count = %llu\n", (unsigned long long)missCounter);
+	missCounter = 0;
+	uint64_t interval = 500000000;
+	schedule(printEvent, curTick() + interval);
 }
 
 void
