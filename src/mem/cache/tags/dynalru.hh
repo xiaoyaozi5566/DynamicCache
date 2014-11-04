@@ -1,6 +1,7 @@
 // This file implements dynamic cache
 
 #include "mem/cache/tags/lru.hh"
+#include "stdio.h"
 
 class DYNALRU : public LRU{
 private:

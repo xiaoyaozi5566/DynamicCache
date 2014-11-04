@@ -447,7 +447,7 @@ class IIC : public BaseTags
 	
 	virtual void inc_size(){};
 	
-	virtual unsigned dec_size(){printf("called incorrect dec_size()\n"); return 0;};
+	virtual unsigned dec_size(){return 0;};
 	
 	virtual BlkType* check_dirty(unsigned index){return NULL;};
 

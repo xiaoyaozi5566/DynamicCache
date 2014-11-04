@@ -1889,8 +1889,8 @@ template<class TagStore>
 void
 DynamicCache<TagStore>::adjustPartition()
 {
-	printf("change partition at cycle %llu\n", curTick());
-	printf("Miss count = %llu\n", missCount);
+	printf("change partition at cycle %llu\n", (unsigned long long)curTick());
+	printf("Miss count = %llu\n", (unsigned long long)missCount);
 	// Change the partition size based on # of misses
 	if(missCount > th_inc) { 
 		printf("increase L partition size\n");

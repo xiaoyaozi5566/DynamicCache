@@ -47,6 +47,7 @@
 #include "debug/Drain.hh"
 #include "dev/dma_device.hh"
 #include "sim/system.hh"
+#include "stdio.h"
 
 DmaPort::DmaPort(MemObject *dev, System *s)
     : MasterPort(dev->name() + ".dma", dev), device(dev), sys(s),
