@@ -1,16 +1,17 @@
 #!/usr/bin/ruby
 
 require_relative 'rerun'
-require_relative 'runscripts'
+#require_relative 'runscripts'
+require_relative 'runDynamic'
 require_relative 'security'
 require_relative 'functionality'
 require_relative 'performance'
-require_relative 'parameter_sweeping'
-require_relative 'memctl_unoptimized'
-require_relative 'memctl_optimized'
-require_relative 'memctl_scheduler'
-require_relative 'memctl_synthetic'
-require_relative 'optimize'
+# require_relative 'parameter_sweeping'
+# require_relative 'memctl_unoptimized'
+# require_relative 'memctl_optimized'
+# require_relative 'memctl_scheduler'
+# require_relative 'memctl_synthetic'
+# require_relative 'optimize'
 include RunScripts
 
 #------------------------------------------------------------------------------
@@ -53,6 +54,7 @@ include RunScripts
 # scalability_qsub
 # breakdown
 # coordination
+single_qsub
 
 #----------------------------------------------------------------------------
 # Parameter Sweeping
@@ -67,7 +69,7 @@ include RunScripts
 # membus_sweeping_qsub
 # memctl_sweeping_qsub
 # fa_sweeping_qsub
-hill_climb
+# hill_climb
 ###############################################################################
 # Memory Controller Tests
 ###############################################################################

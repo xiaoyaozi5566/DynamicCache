@@ -122,6 +122,10 @@ parser.add_option("--p1", type="string",
         help="workload for processor 1.")
 parser.add_option("--p1threadID", type="int", default=1,
         help="timing compartment id for p1")
+parser.add_option("--numpids", type="int", default=2,
+        help="determine the number of PIDs")
+parser.add_option("--numcpus", type="int", default=2,
+        help="determine the number of cpus")
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
@@ -142,7 +146,10 @@ options.l2_assoc=8
 
 multiprocesses = []
 numThreads = 1
-options.num_cpus = 2
+
+# Number of CPUs
+options.num_cpus = ( options.numpids if ( options.numcpus == None )
+        else options.numcpus )
 
 if options.bench:
     apps = options.bench.split("-")
@@ -165,13 +172,26 @@ elif options.cmd:
 
 process0 = LiveProcess()
 process0.cmd = options.p0.split()
-process0.pid = 0
+process0.pid = options.p0threadID
 multiprocesses.append(process0)
 
-process1 = LiveProcess()
-process1.cmd = options.p1.split()
-process1.pid = 1
-multiprocesses.append(process1)
+if options.num_cpus > 1:
+    process1 = LiveProcess()
+    process1.cmd = options.p1.split()
+    process1.pid = options.p1threadID
+    multiprocesses.append(process1)
+
+if options.num_cpus > 2:
+    process2 = LiveProcess()
+    process2.cmd = options.p2.split()
+    process2.pid = options.p2threadID
+    multiprocesses.append(process2)
+
+if options.num_cpus > 3:
+    process3 = LiveProcess()
+    process3.cmd = options.p3.split()
+    process3.pid = options.p3threadID
+    multiprocesses.append(process3)
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 CPUClass.clock = options.clock
@@ -231,4 +251,4 @@ else:
     CacheConfig.config_cache(options, system)
 
 root = Root(full_system = False, system = system)
-Simulation.run(options, root, system, FutureClass, 2)
+Simulation.run(options, root, system, FutureClass, options.numpids)
