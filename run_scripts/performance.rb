@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # Performance Evaluation
 #------------------------------------------------------------------------------
-require_relative 'runscripts'
+require_relative 'runDynamic'
 include RunScripts
 
 module RunScripts
@@ -15,6 +15,24 @@ module RunScripts
       split_rport: true
     }
 
+    def cache_misses
+      single_qsub(
+        cacheSize: 0
+      )
+      
+      single_qsub(
+        cacheSize: 512
+      )
+      
+      single_qsub(
+        cacheSize: 1024
+      )
+      
+      single_qsub(
+        cacheSize: 2048
+      )
+    end
+      
     def baseline
       qsub_scaling(
         schemes: %w[none],

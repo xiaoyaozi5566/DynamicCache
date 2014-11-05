@@ -13,7 +13,7 @@ $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 $fastforward = 10**9
 $maxinsts = 10**8
 $maxtick = 2*10**15 
-$cpus = %w[timing] #timing is also available
+$cpus = %w[timing detailed] #timing is also available
 $schemes = %w[dc]
 
 #benchmarks
@@ -49,8 +49,8 @@ end
 def sav_script( cpu, scheme, p0, options = {} ) 
 
     options = {
-        cacheSize: 4,
         l3config: "shared",
+        cacheSize: 4096,
         runmode: :qsub,
         maxinsts: $maxinsts,
         fastforward: $fastforward,
@@ -86,7 +86,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     filename += "_#{p1}" unless p1.nil?
     filename += "_#{p2}" unless p2.nil?
     filename += "_#{p3}" unless p3.nil?
-    filename += "_c#{cacheSize}MB"
+    filename += "_c#{cacheSize}kB"
 
     filename = "#{options[:nametag]}_"+filename if options[:nametag]
     filename = options[:filename] unless options[:filename].nil?
@@ -109,7 +109,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --l2cache \\")
     unless cacheSize == 0
         script.puts("    --l3cache \\")
-        script.puts("    --l3_size=#{cacheSize}MB\\")
+        script.puts("    --l3_size=#{cacheSize}kB\\")
         script.puts("    --l3config=#{l3config} \\")
     end
     script.puts("    --fast-forward=#{fastforward} \\") unless fastforward == 0
@@ -183,7 +183,8 @@ end
 
 def single opts={}
     o = {
-        cpus: %w[detailed],
+        cpus: %w[detailed timing],
+        cacheSize: 4096,
         schemes: ["none"],
         benchmarks: $specint,
         runmode: :local,
@@ -191,7 +192,7 @@ def single opts={}
         l3config: "private",
         print_misses: true,
         fastforward: 0,
-        maxinsts: 10**8,
+        maxinsts: 10**9,
     }.merge opts
 
     f = []

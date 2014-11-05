@@ -39,10 +39,11 @@ class L3Config(object):
         self.options = options
         self.system = system
         self.latencies = {
-            '4MB' : '8.48ns',
-            '3MB' : '7.5',
-            '2MB' : '6.5ns',
-            '1MB' : '5ns'
+            '4096kB' : '8.48ns',
+            '3072kB' : '7.5',
+            '2048kB' : '6.5ns',
+            '1024kB' : '5ns',
+            '512kB'  : '4ns',
         }
 
     def connect_l2( self ): return
