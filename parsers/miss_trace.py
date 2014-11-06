@@ -18,11 +18,13 @@ def genTrace(input_filename):
     outputfile = open(output_filename, "w")
     # read lines from input file
     linePattern = "Miss count"
+    lineCount = 0
     for line in inputfile:
         searchResult = line.find(linePattern)
         if searchResult != -1:
             missCount = line.split(' ')[-1]
-            outputfile.write("%s" % missCount)
+            lineCount += 1
+            outputfile.write("%s %s" % (lineCount, missCount))
     
     inputfile.close()
     outputfile.close()
