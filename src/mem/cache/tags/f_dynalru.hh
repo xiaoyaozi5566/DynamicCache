@@ -1,15 +1,15 @@
-// This file implements dynamic cache
+// This file implements fine-grained dynamic cache
 
 #include "mem/cache/tags/lru.hh"
 #include "stdio.h"
 
-class C_DYNALRU : public LRU{
+class F_DYNALRU : public LRU{
 private:
 		unsigned L_assoc;
 		unsigned H_assoc;
 
     public:
-    C_DYNALRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
+    F_DYNALRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
             unsigned _hit_latency);
 	
 	virtual void inc_size();

@@ -48,6 +48,7 @@
 
 #if defined(USE_CACHE_DYNALRU)
 #include "mem/cache/tags/c_dynalru.hh"
+#include "mem/cache/tags/f_dynalru.hh"
 #endif
 
 #if defined(USE_CACHE_WPLRU)
@@ -78,6 +79,7 @@ template class SplitMSHRCache<FALRU>;
 template class SplitRPortCache<FALRU>;
 template class DirtyCache<FALRU>;
 template class C_DynamicCache<FALRU>;
+template class F_DynamicCache<FALRU>;
 #endif
 
 #if defined(USE_CACHE_IIC)
@@ -86,6 +88,7 @@ template class SplitMSHRCache<IIC>;
 template class SplitRPortCache<IIC>;
 template class DirtyCache<IIC>;
 template class C_DynamicCache<IIC>;
+template class F_DynamicCache<IIC>;
 #endif
 
 #if defined(USE_CACHE_LRU)
@@ -94,6 +97,7 @@ template class SplitMSHRCache<LRU>;
 template class SplitRPortCache<LRU>;
 template class DirtyCache<LRU>;
 template class C_DynamicCache<LRU>;
+template class F_DynamicCache<LRU>;
 #endif
 
 #if defined(USE_CACHE_WPLRU)
@@ -102,6 +106,7 @@ template class SplitMSHRCache<WPLRU>;
 template class SplitRPortCache<WPLRU>;
 template class DirtyCache<WPLRU>;
 template class C_DynamicCache<WPLRU>;
+template class F_DynamicCache<WPLRU>;
 #endif
 
 #if defined(USE_CACHE_SPLRU)
@@ -110,6 +115,7 @@ template class SplitMSHRCache<SPLRU>;
 template class SplitRPortCache<SPLRU>;
 template class DirtyCache<SPLRU>;
 template class C_DynamicCache<SPLRU>;
+template class F_DynamicCache<SPLRU>;
 #endif
 
 #if defined(USE_CACHE_DCLRU)
@@ -118,6 +124,22 @@ template class SplitMSHRCache<DCLRU>;
 template class SplitRPortCache<DCLRU>;
 template class DirtyCache<DCLRU>;
 template class C_DynamicCache<DCLRU>;
+template class F_DynamicCache<DCLRU>;
+#endif
+
+#if defined(USE_CACHE_DYNALRU)
+template class Cache<C_DYNALRU>;
+template class SplitMSHRCache<C_DYNALRU>;
+template class SplitRPortCache<C_DYNALRU>;
+template class DirtyCache<C_DYNALRU>;
+template class C_DynamicCache<C_DYNALRU>;
+template class F_DynamicCache<C_DYNALRU>;
+template class Cache<F_DYNALRU>;
+template class SplitMSHRCache<F_DYNALRU>;
+template class SplitRPortCache<F_DYNALRU>;
+template class DirtyCache<F_DYNALRU>;
+template class C_DynamicCache<F_DYNALRU>;
+template class F_DynamicCache<F_DYNALRU>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

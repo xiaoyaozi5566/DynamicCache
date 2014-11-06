@@ -42,6 +42,7 @@
 #include "mem/cache/split_rport_cache.hh"
 #include "mem/cache/dirty_cache.hh"
 #include "mem/cache/c_dynamic_cache.hh"
+#include "mem/cache/f_dynamic_cache.hh"
 #include "mem/cache/cache.hh"
 #include "mem/config/cache.hh"
 #include "params/BaseCache.hh"
@@ -53,6 +54,7 @@
 #include "mem/cache/tags/wplru.hh"
 #include "mem/cache/tags/dclru.hh"
 #include "mem/cache/tags/c_dynalru.hh"
+#include "mem/cache/tags/f_dynalru.hh"
 #endif
 
 #if defined(USE_CACHE_FALRU)
@@ -77,6 +79,8 @@ using namespace std;
             retval = new DirtyCache<TAGS>(this, tags);        \
         else if( c_dynamic_cache )                                \
             retval = new C_DynamicCache<TAGS>(this, tags);        \
+        else if( f_dynamic_cache )                                \
+            retval = new F_DynamicCache<TAGS>(this, tags);        \
         else                                                  \
             retval = new Cache<TAGS>(this, tags);             \
         return retval;                                        \
@@ -100,6 +104,8 @@ using namespace std;
         LRU *tags;                                                      \
 		if( c_dynamic_cache )                                              \
 			tags = new C_DYNALRU( numSets, block_size, assoc, latency ); \
+		else if( f_dynamic_cache )                                              \
+			tags = new F_DYNALRU( numSets, block_size, assoc, latency ); \
 		else if( dirty_cache )                                              \
 			tags = new DCLRU( numSets, block_size, assoc, latency ); \
         else if( use_way_part )                                              \

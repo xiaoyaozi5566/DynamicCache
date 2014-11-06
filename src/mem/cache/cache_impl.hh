@@ -63,6 +63,7 @@
 #include "mem/cache/split_rport_cache.hh"
 #include "mem/cache/dirty_cache.hh"
 #include "mem/cache/c_dynamic_cache.hh"
+#include "mem/cache/f_dynamic_cache.hh"
 #include "sim/sim_exit.hh"
 
 template<class TagStore>
@@ -1887,6 +1888,49 @@ C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
 template<class TagStore>
 void
 C_DynamicCache<TagStore>::adjustPartition()
+{
+	printf("change partition at cycle %llu\n", (unsigned long long)curTick());
+	printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
+	// Change the partition size based on # of misses
+	if(this->missCounter > th_inc) { 
+		printf("increase L partition size\n");
+		this->tags->inc_size();
+	}
+	else if (this->missCounter < th_dec) {
+		printf("decrease L partition size\n");
+		unsigned numSets = this->tags->dec_size();
+		// write back if the block is dirty
+		for(unsigned i = 0; i < numSets; i++){
+			BlkType *tempBlk = this->tags->check_dirty(i);
+			if(tempBlk->isDirty() && tempBlk->isValid())
+				this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
+			else
+				this->tags->invalidateBlk(tempBlk, 1);
+		}
+	}
+	// Reset miss count
+	this->missCounter = 0;
+	// Schedule the next partition size adjust event
+	this->schedule(adjustEvent, curTick()+interval);
+}
+
+//-----------------------------------------------------------------------------
+// Fine-grained Dynamic Cache
+//-----------------------------------------------------------------------------
+template<class TagStore>
+F_DynamicCache<TagStore>::F_DynamicCache( const Params *p, TagStore *tags )
+    : SplitRPortCache<TagStore>( p, tags ), adjustEvent(this)
+{
+	printf("create coarse-grained dynamic cache!\n");
+	interval = 500000000;
+	th_inc = 200;
+	th_dec = 10;
+	this->schedule(adjustEvent, interval);
+}
+
+template<class TagStore>
+void
+F_DynamicCache<TagStore>::adjustPartition()
 {
 	printf("change partition at cycle %llu\n", (unsigned long long)curTick());
 	printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
