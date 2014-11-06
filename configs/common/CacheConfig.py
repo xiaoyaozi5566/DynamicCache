@@ -56,7 +56,8 @@ class L3Shared( L3Config ):
                             assoc = options.l3_assoc,
                             block_size=options.cacheline_size,
                             num_tcs = options.numpids,
-                            dynamic_cache = options.dynamic_cache)
+                            c_dynamic_cache = options.c_dynamic_cache,
+                            f_dynamic_cache = options.f_dynamic_cache)
 
         system.tol3bus = ( 
                 RR_NoncoherentBus(num_pids = options.numpids,
