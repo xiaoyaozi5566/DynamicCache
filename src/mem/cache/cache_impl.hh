@@ -62,7 +62,7 @@
 #include "mem/cache/split_mshr_cache.hh"
 #include "mem/cache/split_rport_cache.hh"
 #include "mem/cache/dirty_cache.hh"
-#include "mem/cache/dynamic_cache.hh"
+#include "mem/cache/c_dynamic_cache.hh"
 #include "sim/sim_exit.hh"
 
 template<class TagStore>
@@ -1871,13 +1871,13 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
 }
 
 //-----------------------------------------------------------------------------
-// Dynamic Cache
+// Coarse-grained Dynamic Cache
 //-----------------------------------------------------------------------------
 template<class TagStore>
-DynamicCache<TagStore>::DynamicCache( const Params *p, TagStore *tags )
+C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
     : SplitRPortCache<TagStore>( p, tags ), adjustEvent(this)
 {
-	printf("create dynamic cache!\n");
+	printf("create coarse-grained dynamic cache!\n");
 	interval = 500000000;
 	th_inc = 200;
 	th_dec = 10;
@@ -1886,7 +1886,7 @@ DynamicCache<TagStore>::DynamicCache( const Params *p, TagStore *tags )
 
 template<class TagStore>
 void
-DynamicCache<TagStore>::adjustPartition()
+C_DynamicCache<TagStore>::adjustPartition()
 {
 	printf("change partition at cycle %llu\n", (unsigned long long)curTick());
 	printf("Miss count = %llu\n", (unsigned long long)this->missCounter);

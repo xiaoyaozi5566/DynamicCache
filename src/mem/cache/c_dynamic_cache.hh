@@ -6,10 +6,10 @@
 
 typedef BaseCacheParams Params;
 template <class TagStore>
-class DynamicCache : public SplitRPortCache<TagStore>
+class C_DynamicCache : public SplitRPortCache<TagStore>
 {
     public:
-    DynamicCache( const Params *p, TagStore *tags );
+    C_DynamicCache( const Params *p, TagStore *tags );
     /** Define the type of cache block to use. */
     typedef typename TagStore::BlkType BlkType;
     /** A typedef for a list of BlkType pointers. */
@@ -23,7 +23,7 @@ protected:
 	
 	void adjustPartition();
 	
-	EventWrapper<DynamicCache<TagStore>, &DynamicCache<TagStore>::adjustPartition> adjustEvent;
+	EventWrapper<C_DynamicCache<TagStore>, &C_DynamicCache<TagStore>::adjustPartition> adjustEvent;
 	
 private:
 	// Time interval to change partition size (ticks)

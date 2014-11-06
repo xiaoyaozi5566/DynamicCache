@@ -47,7 +47,7 @@
 #endif
 
 #if defined(USE_CACHE_DYNALRU)
-#include "mem/cache/tags/dynalru.hh"
+#include "mem/cache/tags/c_dynalru.hh"
 #endif
 
 #if defined(USE_CACHE_WPLRU)
@@ -77,7 +77,7 @@ template class Cache<FALRU>;
 template class SplitMSHRCache<FALRU>;
 template class SplitRPortCache<FALRU>;
 template class DirtyCache<FALRU>;
-template class DynamicCache<FALRU>;
+template class C_DynamicCache<FALRU>;
 #endif
 
 #if defined(USE_CACHE_IIC)
@@ -85,7 +85,7 @@ template class Cache<IIC>;
 template class SplitMSHRCache<IIC>;
 template class SplitRPortCache<IIC>;
 template class DirtyCache<IIC>;
-template class DynamicCache<IIC>;
+template class C_DynamicCache<IIC>;
 #endif
 
 #if defined(USE_CACHE_LRU)
@@ -93,7 +93,7 @@ template class Cache<LRU>;
 template class SplitMSHRCache<LRU>;
 template class SplitRPortCache<LRU>;
 template class DirtyCache<LRU>;
-template class DynamicCache<LRU>;
+template class C_DynamicCache<LRU>;
 #endif
 
 #if defined(USE_CACHE_WPLRU)
@@ -101,7 +101,7 @@ template class Cache<WPLRU>;
 template class SplitMSHRCache<WPLRU>;
 template class SplitRPortCache<WPLRU>;
 template class DirtyCache<WPLRU>;
-template class DynamicCache<WPLRU>;
+template class C_DynamicCache<WPLRU>;
 #endif
 
 #if defined(USE_CACHE_SPLRU)
@@ -109,7 +109,7 @@ template class Cache<SPLRU>;
 template class SplitMSHRCache<SPLRU>;
 template class SplitRPortCache<SPLRU>;
 template class DirtyCache<SPLRU>;
-template class DynamicCache<SPLRU>;
+template class C_DynamicCache<SPLRU>;
 #endif
 
 #if defined(USE_CACHE_DCLRU)
@@ -117,7 +117,7 @@ template class Cache<DCLRU>;
 template class SplitMSHRCache<DCLRU>;
 template class SplitRPortCache<DCLRU>;
 template class DirtyCache<DCLRU>;
-template class DynamicCache<DCLRU>;
+template class C_DynamicCache<DCLRU>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

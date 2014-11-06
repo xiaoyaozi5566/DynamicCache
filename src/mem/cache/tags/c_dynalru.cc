@@ -1,4 +1,4 @@
-#include "mem/cache/tags/dynalru.hh"
+#include "mem/cache/tags/c_dynalru.hh"
 #include "base/intmath.hh"
 #include "debug/CacheRepl.hh"
 #include "mem/cache/tags/cacheset.hh"
@@ -8,7 +8,7 @@
 #include "mem/cache/blk.hh"
 #include <typeinfo>
 
-DYNALRU::DYNALRU( unsigned _numSets,
+C_DYNALRU::C_DYNALRU( unsigned _numSets,
         unsigned _blkSize,
         unsigned _assoc,
         unsigned _hit_latency)
@@ -21,19 +21,19 @@ DYNALRU::DYNALRU( unsigned _numSets,
 
 // label: 0->L, 1->H
 CacheSet
-DYNALRU::get_set( int setnum, uint64_t label, Addr addr ){
+C_DYNALRU::get_set( int setnum, uint64_t label, Addr addr ){
     CacheSet s = sets[label][setnum];
     return s;
 }
 
 int
-DYNALRU::assoc_of_tc( int tcid ){
+C_DYNALRU::assoc_of_tc( int tcid ){
     if (tcid == 0) return L_assoc;
 	else return H_assoc;
 }
 
 void
-DYNALRU::init_sets(){
+C_DYNALRU::init_sets(){
     sets = new CacheSet*[2];
     for( int i=0; i< 2; i++ ){ sets[i] = new CacheSet[numSets]; }
 
@@ -66,7 +66,7 @@ DYNALRU::init_sets(){
 
 // increase the size of Low partition
 void
-DYNALRU::inc_size(){
+C_DYNALRU::inc_size(){
 	if(H_assoc == 0) return;
 	
 	L_assoc += 1;
@@ -100,7 +100,7 @@ DYNALRU::inc_size(){
 }
 
 unsigned 
-DYNALRU::dec_size(){
+C_DYNALRU::dec_size(){
 	if(L_assoc == 0) return 0;
 	
 	L_assoc -= 1;
@@ -132,7 +132,7 @@ DYNALRU::dec_size(){
 	return numSets;
 }
 
-DYNALRU::BlkType*
-DYNALRU::check_dirty(unsigned index){
+C_DYNALRU::BlkType*
+C_DYNALRU::check_dirty(unsigned index){
 	return sets[1][index].blks[H_assoc-1];
 }

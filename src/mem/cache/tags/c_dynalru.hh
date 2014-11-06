@@ -3,13 +3,13 @@
 #include "mem/cache/tags/lru.hh"
 #include "stdio.h"
 
-class DYNALRU : public LRU{
+class C_DYNALRU : public LRU{
 private:
 		unsigned L_assoc;
 		unsigned H_assoc;
 
     public:
-    DYNALRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
+    C_DYNALRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
             unsigned _hit_latency);
 	
 	protected:
