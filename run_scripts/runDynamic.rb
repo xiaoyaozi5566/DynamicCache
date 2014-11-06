@@ -112,6 +112,7 @@ def sav_script( cpu, scheme, p0, options = {} )
         script.puts("    --l3_size=#{cacheSize}kB\\")
         script.puts("    --l3config=#{l3config} \\")
     end
+    script.puts("    --l2trace \\") if cacheSize == 0
     script.puts("    --fast-forward=#{fastforward} \\") unless fastforward == 0
     script.puts("    --maxinsts=#{maxinsts} \\")
     script.puts("    --maxtick=#{$maxtick} \\")

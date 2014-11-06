@@ -143,7 +143,8 @@ def config_cache(options, system):
             L2Cache( 
                 size = options.l2_size,
                 assoc = options.l2_assoc,
-                block_size=options.cacheline_size 
+                block_size=options.cacheline_size,
+                print_misses = options.l2trace
             ) 
             for i in xrange( options.num_cpus )
         ]
