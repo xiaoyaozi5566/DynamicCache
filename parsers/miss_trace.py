@@ -23,9 +23,13 @@ def genTrace(input_filename):
         searchResult = line.find(linePattern)
         if searchResult != -1:
             missCount = line.split(' ')[-1]
-            lineCount += 1
-            outputfile.write("%s %s" % (lineCount, missCount))
-    
+            try:
+                int(missCount)
+                lineCount += 1
+                outputfile.write("%s %s" % (lineCount, missCount))
+            except ValueError:          
+                print missCount
+                
     inputfile.close()
     outputfile.close()
     # # create output folder if not exist
