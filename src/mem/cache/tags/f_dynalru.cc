@@ -95,3 +95,113 @@ F_DYNALRU::get_evictBlk(unsigned index){
 	}
 	return NULL;
 }
+
+F_DYNALRU::BlkType*
+F_DYNALRU::accessBlock(Addr addr, int &lat, int master_id, uint64_t tid)
+{
+    Addr tag = extractTag(addr);
+    unsigned set = extractSet(addr);
+    // BlkType *blk = sets[set].findBlk(tag);
+    BlkType *blk = get_set(set,tid,addr).findBlk(tag);
+    lat = hitLatency;
+    if (blk != 0 ) {
+        // move this block to head of the MRU list
+        get_set(set,tid,addr).moveToHead(blk);
+        DPRINTF(CacheRepl, "set %x: moving blk %x to MRU\n",
+                set, regenerateBlkAddr(tag, set));
+        if (blk->whenReady > curTick()
+            && blk->whenReady - curTick() > hitLatency) {
+            lat = blk->whenReady - curTick();
+        }
+        blk->refCount += 1;
+		// set the used bit
+		blk->isTouched = 1;
+    }
+
+    return blk;
+}
+
+
+F_DYNALRU::BlkType*
+F_DYNALRU::findBlock(Addr addr, uint64_t tid)
+{
+    Addr tag = extractTag(addr);
+    unsigned set = extractSet(addr);
+    BlkType *blk = get_set(set,tid,addr).findBlk(tag);
+    return blk;
+}
+
+F_DYNALRU::BlkType*
+F_DYNALRU::findVictim(Addr addr, PacketList &writebacks, uint64_t tid)
+{
+    unsigned set = extractSet(addr);
+    // grab a replacement candidate
+    BlkType *blk = get_set(set,tid,addr).blks[assoc_of_tc(tid)-1];
+
+    if (blk->isValid()) {
+        DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
+                set, regenerateBlkAddr(blk->tag, set));
+    }
+    return blk;
+}
+
+void
+F_DYNALRU::insertBlock(Addr addr, BlkType *blk, int master_id, uint64_t tid)
+{
+    if (!blk->isTouched) {
+        tagsInUse++;
+        blk->isTouched = true;
+        if (!warmedUp && tagsInUse.value() >= warmupBound) {
+            warmedUp = true;
+            warmupCycle = curTick();
+        }
+    }
+
+    // If we're replacing a block that was previously valid update
+    // stats for it. This can't be done in findBlock() because a
+    // found block might not actually be replaced there if the
+    // coherence protocol says it can't be.
+    if (blk->isValid()) {
+        replacements[0]++;
+        totalRefs += blk->refCount;
+        ++sampledRefs;
+        blk->refCount = 0;
+
+        // deal with evicted block
+        assert(blk->srcMasterId < cache->system->maxMasters());
+        occupancies[blk->srcMasterId]--;
+    }
+
+    // Set tag for new block.  Caller is responsible for setting status.
+    blk->tag = extractTag(addr);
+
+    // deal with what we are bringing in
+    assert(master_id < cache->system->maxMasters());
+    occupancies[master_id]++;
+    blk->srcMasterId = master_id;
+
+    unsigned set = extractSet(addr);
+    get_set(set,tid,addr).moveToHead(blk);
+}
+
+void
+F_DYNALRU::invalidateBlk(BlkType *blk, uint64_t tid)
+{
+    if (blk) {
+        if (blk->isValid()) {
+            tagsInUse--;
+            assert(blk->srcMasterId < cache->system->maxMasters());
+            occupancies[blk->srcMasterId]--;
+            blk->srcMasterId = Request::invldMasterId;
+            unsigned set = blk->set;
+            get_set(set,tid,blk->set).moveToTail(blk);
+        }
+        blk->status = 0;
+        blk->isTouched = false;
+        blk->clearLoadLocks();
+
+        // should be evicted before valid blocks
+        //unsigned set = blk->set;
+        //sets[set].moveToTail(blk);
+    }
+}
