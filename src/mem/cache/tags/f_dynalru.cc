@@ -102,11 +102,22 @@ F_DYNALRU::accessBlock(Addr addr, int &lat, int master_id, uint64_t tid)
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
     // BlkType *blk = sets[set].findBlk(tag);
-    BlkType *blk = get_set(set,tid,addr).findBlk(tag);
+    BlkType *blk;
+	bool inLow = false;
+	// Low access only accesses the Low partition
+	if(tid == 0) blk = get_set(set,0,addr).findBlk(tag);
+	// High access accesses both Low and High partitions
+	else{
+		blk = get_set(set,1,addr).findBlk(tag);
+		if (blk == 0) {
+			blk = get_set(set, 0, addr).findBlk(tag);
+			inLow = true;
+		}
+	}
     lat = hitLatency;
     if (blk != 0 ) {
         // move this block to head of the MRU list
-        get_set(set,tid,addr).moveToHead(blk);
+        if (!inLow) get_set(set,tid,addr).moveToHead(blk);
         DPRINTF(CacheRepl, "set %x: moving blk %x to MRU\n",
                 set, regenerateBlkAddr(tag, set));
         if (blk->whenReady > curTick()
@@ -127,7 +138,16 @@ F_DYNALRU::findBlock(Addr addr, uint64_t tid)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    BlkType *blk = get_set(set,tid,addr).findBlk(tag);
+    BlkType *blk;
+	// Low access only accesses the Low partition
+	if(tid == 0) blk = get_set(set,0,addr).findBlk(tag);
+	// High access accesses both Low and High partitions
+	else{
+		blk = get_set(set,1,addr).findBlk(tag);
+		if (blk == 0) {
+			blk = get_set(set, 0, addr).findBlk(tag);
+		}
+	}
     return blk;
 }
 
@@ -136,7 +156,29 @@ F_DYNALRU::findVictim(Addr addr, PacketList &writebacks, uint64_t tid)
 {
     unsigned set = extractSet(addr);
     // grab a replacement candidate
-    BlkType *blk = get_set(set,tid,addr).blks[assoc_of_tc(tid)-1];
+    BlkType *blk;
+	if(tid == 0) blk = get_set(set,0,addr).blks[assoc_of_tc(tid)-1];
+	else{
+		CacheSet s = get_set(set, 1, addr);
+		for(unsigned i = H_assoc - 1; i >= 0; i--){
+			if(!s.blks[i]->isValid()) {
+				blk = s.blks[i];
+				break;
+			}	
+		}
+		// No invalid entry in High partition
+		if(blk == NULL) {
+			s = get_set(set, 0, addr);
+			for(unsigned i = 0; i < L_assoc; i++){
+				if(!s.blks[i]->isValid()){
+					blk = s.blks[i];
+					break;
+				}
+			}
+		}
+		// No invalid entry in the entire cache
+		blk = get_set(set, 1, addr).blks[assoc_of_tc(tid)-1];
+	}
 
     if (blk->isValid()) {
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
@@ -174,6 +216,8 @@ F_DYNALRU::insertBlock(Addr addr, BlkType *blk, int master_id, uint64_t tid)
 
     // Set tag for new block.  Caller is responsible for setting status.
     blk->tag = extractTag(addr);
+	// update the threadID of the new block
+	blk->threadID = tid;
 
     // deal with what we are bringing in
     assert(master_id < cache->system->maxMasters());
@@ -181,7 +225,9 @@ F_DYNALRU::insertBlock(Addr addr, BlkType *blk, int master_id, uint64_t tid)
     blk->srcMasterId = master_id;
 
     unsigned set = extractSet(addr);
-    get_set(set,tid,addr).moveToHead(blk);
+	BlkType *tempBlock = get_set(set,tid,addr).findBlk(blk->tag);
+	// check if we are placing a High entry into the Low partitioin (in this case, no)
+	if(tempBlock != 0) get_set(set,tid,addr).moveToHead(blk);
 }
 
 void
@@ -194,7 +240,9 @@ F_DYNALRU::invalidateBlk(BlkType *blk, uint64_t tid)
             occupancies[blk->srcMasterId]--;
             blk->srcMasterId = Request::invldMasterId;
             unsigned set = blk->set;
-            get_set(set,tid,blk->set).moveToTail(blk);
+			BlkType *tempBlock = get_set(set,tid,0).findBlk(blk->tag);
+			// check if the block is a High entry in the Low partition
+			if(tempBlock != 0) get_set(set,tid,blk->set).moveToTail(blk);
         }
         blk->status = 0;
         blk->isTouched = false;
