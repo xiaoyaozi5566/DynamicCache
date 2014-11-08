@@ -1901,7 +1901,7 @@ C_DynamicCache<TagStore>::adjustPartition()
 		unsigned numSets = this->tags->dec_size();
 		// write back if the block is dirty
 		for(unsigned i = 0; i < numSets; i++){
-			BlkType *tempBlk = this->tags->check_dirty(i);
+			BlkType *tempBlk = this->tags->get_evictBlk(i);
 			if(tempBlk->isDirty() && tempBlk->isValid())
 				this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
 			else
@@ -1921,7 +1921,7 @@ template<class TagStore>
 F_DynamicCache<TagStore>::F_DynamicCache( const Params *p, TagStore *tags )
     : SplitRPortCache<TagStore>( p, tags ), adjustEvent(this)
 {
-	printf("create coarse-grained dynamic cache!\n");
+	printf("create fine-grained dynamic cache!\n");
 	interval = 500000000;
 	th_inc = 200;
 	th_dec = 10;
@@ -1934,22 +1934,16 @@ F_DynamicCache<TagStore>::adjustPartition()
 {
 	printf("change partition at cycle %llu\n", (unsigned long long)curTick());
 	printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
-	// Change the partition size based on # of misses
-	if(this->missCounter > th_inc) { 
-		printf("increase L partition size\n");
-		this->tags->inc_size();
-	}
-	else if (this->missCounter < th_dec) {
-		printf("decrease L partition size\n");
-		unsigned numSets = this->tags->dec_size();
-		// write back if the block is dirty
-		for(unsigned i = 0; i < numSets; i++){
-			BlkType *tempBlk = this->tags->check_dirty(i);
-			if(tempBlk->isDirty() && tempBlk->isValid())
-				this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
-			else
-				this->tags->invalidateBlk(tempBlk, 1);
-		}
+	// adjust the cache size based on the usage of cache sets
+	unsigned numSets = this->tags->dec_size();
+	// invalidate the cacheline with threadID 1000, reset used bit
+	for(unsigned i = 0; i < numSets; i++){
+		BlkType *tempBlk = this->tags->get_evictBlk(i);
+		if(tempBlk == NULL) continue;
+		if(tempBlk->isDirty() && tempBlk->isValid())
+			this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
+		else
+			this->tags->invalidateBlk(tempBlk, 0);
 	}
 	// Reset miss count
 	this->missCounter = 0;

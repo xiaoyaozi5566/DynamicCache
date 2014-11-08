@@ -58,81 +58,40 @@ F_DYNALRU::init_sets(){
                 blk->isTouched = false;
                 blk->size = blkSize;
                 blk->set = i;
+				// initialize the threadID
+				blk->threadID = tc;
                 sets[tc][i].blks[j]=blk;
             }
         }
     }
 }
 
-// increase the size of Low partition
-void
-F_DYNALRU::inc_size(){
-	if(H_assoc == 0) return;
-	
-	L_assoc += 1;
-	H_assoc -= 1;
-	
-	printf("L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
-	
-	for( unsigned i = 0; i < numSets; i++){
-		// increase the size of L partition
-		sets[0][i].assoc = L_assoc;
-		CacheBlk **tempBlks = sets[0][i].blks;
-		sets[0][i].blks = new BlkType*[L_assoc];
-		// copy the original cache blocks
-		for( unsigned j = 0; j<L_assoc-1; j++){
-			sets[0][i].blks[j] = tempBlks[j];
-		}
-		// append the new blk from High partition
-		sets[0][i].blks[L_assoc-1] = sets[1][i].blks[H_assoc];
-		// mark as dirty to hide the "dirty" bit
-		sets[0][i].blks[L_assoc-1]->status |= BlkDirty;
-		
-		// decrease the size of H partition
-		sets[1][i].assoc = H_assoc;
-		tempBlks = sets[1][i].blks;
-		sets[1][i].blks = new BlkType*[H_assoc];
-		// remove one block from High partition
-		for( unsigned j = 0; j<H_assoc; j++){
-			sets[1][i].blks[j] = tempBlks[j];
-		}
-	}
-}
-
 unsigned 
 F_DYNALRU::dec_size(){
-	if(L_assoc == 0) return 0;
-	
-	L_assoc -= 1;
-	H_assoc += 1;
-	
-	printf("L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
-	
 	for( unsigned i = 0; i < numSets; i++){
-		// increase the size of H partition
-		sets[1][i].assoc = H_assoc;
-		CacheBlk **tempBlks = sets[1][i].blks;
-		sets[1][i].blks = new BlkType*[H_assoc];
-		// copy the original blocks
-		for( unsigned j = 0; j<H_assoc-1; j++){
-			sets[1][i].blks[j] = tempBlks[j];
-		}
-		// append the new blk from Low partition
-		sets[1][i].blks[H_assoc-1] = sets[0][i].blks[L_assoc];
-		
-		// decrease the size of L partition
-		sets[0][i].assoc = L_assoc;
-		tempBlks = sets[0][i].blks;
-		sets[0][i].blks = new BlkType*[L_assoc];
-		// remove one block from Low partition
-		for( unsigned j = 0; j<L_assoc; j++){
-			sets[0][i].blks[j] = tempBlks[j];
+		// Search backwards to evict the LRU first
+		for( unsigned j = L_assoc - 1; j >= 0; j--){
+			BlkType *tempBlk = sets[0][i].blks[j];
+			// Found a cacheline in Low partition that hasn't been used, should evict
+			if (tempBlk->threadID == 0 && tempBlk->isTouched == false && tempBlk->isValid()){
+				// assign 1000 to threadID for later eviction
+				sets[0][i].blks[j]->threadID = 1000;
+				break;
+			}
 		}
 	}
+
 	return numSets;
 }
 
 F_DYNALRU::BlkType*
-F_DYNALRU::check_dirty(unsigned index){
-	return sets[1][index].blks[H_assoc-1];
+F_DYNALRU::get_evictBlk(unsigned index){
+	for(unsigned i = 0; i < L_assoc; i++){
+		BlkType *tempBlk = sets[0][index].blks[i];
+		if(tempBlk->threadID == 1000){
+			tempBlk->threadID = 0;
+			return tempBlk;
+		}
+	}
+	return NULL;
 }

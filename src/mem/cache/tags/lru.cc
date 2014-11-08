@@ -144,6 +144,8 @@ LRU::accessBlock(Addr addr, int &lat, int master_id, uint64_t tid)
             lat = blk->whenReady - curTick();
         }
         blk->refCount += 1;
+		// set the used bit
+		blk->isTouched = 1;
     }
 
     return blk;

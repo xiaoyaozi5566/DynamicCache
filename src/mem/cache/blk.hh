@@ -104,6 +104,9 @@ class CacheBlk
 
     /** holds the source requestor ID for this block. */
     int srcMasterId;
+	
+	/** threadID for this block */
+	int threadID;
 
   protected:
     /**
@@ -135,7 +138,7 @@ class CacheBlk
     CacheBlk()
         : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
           set(-1), isTouched(false), refCount(0),
-          srcMasterId(Request::invldMasterId)
+          srcMasterId(Request::invldMasterId), threadID(0)
     {}
 
     /**

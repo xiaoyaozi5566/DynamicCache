@@ -133,6 +133,6 @@ C_DYNALRU::dec_size(){
 }
 
 C_DYNALRU::BlkType*
-C_DYNALRU::check_dirty(unsigned index){
+C_DYNALRU::get_evictBlk(unsigned index){
 	return sets[1][index].blks[H_assoc-1];
 }

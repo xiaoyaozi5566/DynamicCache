@@ -14,7 +14,7 @@ private:
 	
 	virtual void inc_size();
 	virtual unsigned dec_size();
-	virtual BlkType* check_dirty(unsigned index);
+	virtual BlkType* get_evictBlk(unsigned index);
 	
 	protected:
     CacheSet **sets;

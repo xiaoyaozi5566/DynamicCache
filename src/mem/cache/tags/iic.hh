@@ -449,7 +449,7 @@ class IIC : public BaseTags
 	
 	virtual unsigned dec_size(){return 0;};
 	
-	virtual BlkType* check_dirty(unsigned index){return NULL;};
+	virtual BlkType* get_evictBlk(unsigned index){return NULL;};
 
     /**
      * Find a replacement block for the address provided.
