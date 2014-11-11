@@ -32,6 +32,12 @@ module RunScripts
         cacheSize: 2048
       )
     end
+    
+    def perSet_misses
+      single_qsub(
+        cacheSize: 1024
+      )
+    end
       
     def baseline
       qsub_scaling(
