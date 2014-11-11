@@ -74,3 +74,6 @@ class BaseCache(MemObject):
     split_rport    = Param.Bool(False, "Use Split Response Port Queue per TC?")
     cw_first       = Param.Bool(True, "Use critical word first timing")
     print_misses   = Param.Bool(False, "print the misses")
+    time_interval  = Param.Int(500000000, "Time interval to change partition size")
+    threshold_inc  = Param.Int(200, "threshold that indicates Low partition should increase")
+    threshold_dec  = Param.Int(20, "threshold that indicates Low partition should decrease")

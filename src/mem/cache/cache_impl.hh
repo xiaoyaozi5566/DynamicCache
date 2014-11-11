@@ -1879,9 +1879,9 @@ C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
     : SplitRPortCache<TagStore>( p, tags ), adjustEvent(this)
 {
 	printf("create coarse-grained dynamic cache!\n");
-	interval = 500000000;
-	th_inc = 200;
-	th_dec = 10;
+	interval = p->time_interval;
+	th_inc = p->threshold_inc;
+	th_dec = p->threshold_dec;
 	this->schedule(adjustEvent, interval);
 }
 
