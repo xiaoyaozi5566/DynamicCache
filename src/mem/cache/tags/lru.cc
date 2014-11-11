@@ -71,8 +71,20 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     warmedUp = false;
     /** @todo Make warmup percentage a parameter. */
     warmupBound = numSets * assoc;
+	/** initialize miss counter */
+	missCounter = new unsigned[numSets];
+	for (unsigned i = 0; i < numSets; i++)
+		missCounter[i] = 0;
     
     init_sets();
+}
+
+void
+LRU::printMisses(){
+	for (unsigned i = 0; i < numSets; i++){
+		printf("set %u = %u\n", i, missCounter[i]);
+		missCounter[i] = 0;
+	}
 }
 
 CacheSet
@@ -147,6 +159,9 @@ LRU::accessBlock(Addr addr, int &lat, int master_id, uint64_t tid)
 		// set the used bit
 		blk->isTouched = 1;
     }
+	else{
+		missCounter[set]++;
+	}
 
     return blk;
 }

@@ -476,6 +476,8 @@ class IIC : public BaseTags
      * Called at end of simulation to complete average block reference stats.
      */
     virtual void cleanupRefs();
+	
+	virtual void printMisses() {}
 
 private:
     /**

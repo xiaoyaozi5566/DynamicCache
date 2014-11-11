@@ -87,6 +87,8 @@ class LRU : public BaseTags
     unsigned setMask;
     /** Mask out all bits that aren't part of the block offset. */
     unsigned blkMask;
+	/** Miss counter for each set */
+	unsigned *missCounter;
 
 public:
     /**
@@ -277,6 +279,8 @@ public:
      * Called at end of simulation to complete average block reference stats.
      */
     virtual void cleanupRefs();
+	
+	virtual void printMisses();
 };
 
 #endif // __MEM_CACHE_TAGS_LRU_HH__

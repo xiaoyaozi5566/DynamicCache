@@ -72,7 +72,7 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
       tags(tags),
       prefetcher(p->prefetcher),
       doFastWrites(true),
-      prefetchOnAccess(p->prefetch_on_access)
+      prefetchOnAccess(p->prefetch_on_access), printSetEvent(this)
 {
     tempBlock = new BlkType();
     tempBlock->data = new uint8_t[blkSize];
@@ -89,6 +89,16 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     tracePrinter = new TracePrinter( p->l3_trace_file, p );
 
     params = p;
+	
+	if(p->print_misses) schedule(printSetEvent, params->time_interval);
+}
+
+template<class TagStore>
+void
+Cache<TagStore>::printSetMisses()
+{
+	tags->printMisses();
+	schedule(printSetEvent, curTick()+params->time_interval);
 }
 
 template<class TagStore>

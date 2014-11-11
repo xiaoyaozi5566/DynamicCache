@@ -315,6 +315,8 @@ public:
      *Needed to clear all lock tracking at once
      */
     virtual void clearLocks();
+	
+	virtual void printMisses() {}
 };
 
 #endif // __MEM_CACHE_TAGS_FA_LRU_HH__

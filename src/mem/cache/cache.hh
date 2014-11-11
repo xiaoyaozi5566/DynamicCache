@@ -420,6 +420,10 @@ class Cache : public BaseCache
      */
     virtual void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
+	
+	void printSetMisses();
+	
+	EventWrapper<Cache, &Cache::printSetMisses> printSetEvent;
 };
 
 #endif // __CACHE_HH__
