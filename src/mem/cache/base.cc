@@ -90,8 +90,8 @@ BaseCache::BaseCache(const Params *p)
 void
 BaseCache::printMisses()
 {
-	printf("@ cycle %llu\n", (unsigned long long)curTick());
-	printf("Miss count = %llu\n", (unsigned long long)missCounter);
+	fprintf(stderr, "@ cycle %llu\n", (unsigned long long)curTick());
+	fprintf(stderr, "Miss count = %llu\n", (unsigned long long)missCounter);
 	missCounter = 0;
 	uint64_t interval = params->time_interval;
 	schedule(printEvent, curTick() + interval);

@@ -90,7 +90,7 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
 
     params = p;
 	
-	if(p->print_misses) schedule(printSetEvent, params->time_interval);
+	if(p->print_perSet_misses) schedule(printSetEvent, params->time_interval);
 }
 
 template<class TagStore>

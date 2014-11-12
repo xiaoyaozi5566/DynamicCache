@@ -116,6 +116,7 @@ parser.add_option("--dirty_cache", action="store_true")
 parser.add_option("--c_dynamic_cache", action="store_true")
 parser.add_option("--f_dynamic_cache", action="store_true")
 parser.add_option("--print_misses", action="store_true")
+parser.add_option("--print_perSet_misses", action="store_true")
 parser.add_option("--l2trace", action="store_true")
 parser.add_option("--p0", type="string", 
         help="workload for processor 0."),

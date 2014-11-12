@@ -88,7 +88,8 @@ class L3Private( L3Config ):
                     latency = self.latencies[options.l3_size],
                     assoc = options.l3_assoc,
                     block_size = options.cacheline_size,
-                    print_misses = options.print_misses
+                    print_misses = options.print_misses,
+                    print_perSet_misses = options.print_perSet_misses
                 )
                 for i in xrange( options.num_cpus )
             ]
