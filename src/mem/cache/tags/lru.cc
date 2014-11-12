@@ -82,7 +82,7 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
 void
 LRU::printMisses(){
 	for (unsigned i = 0; i < numSets; i++){
-		printf("set %u = %u\n", i, missCounter[i]);
+		fprintf(stderr, "Set %u = %u\n", i, missCounter[i]);
 		missCounter[i] = 0;
 	}
 }
