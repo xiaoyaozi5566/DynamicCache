@@ -11,7 +11,7 @@ from os import walk
 def genTrace(input_filename):
     print "Parsing " + input_filename
     # output filename
-    output_filename = input_filename[:-4] + ".trc"
+    output_filename = input_filename.split('.')[0] + ".trc"
     # open input file
     inputfile = open(input_filename, "r")
     # open output file
@@ -53,5 +53,4 @@ for (dirpath, dirnames, filenames) in walk(folder):
     break
 # generate traces for all the files
 for file in f:
-    if file[-3:] == "out":
-        genTrace(folder+file)
+    genTrace(folder+file)
