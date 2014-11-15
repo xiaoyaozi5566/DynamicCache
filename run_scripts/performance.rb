@@ -15,7 +15,7 @@ module RunScripts
       split_rport: true
     }
 
-    def cache_misses
+    def cache_misses_spec
       single_qsub(
         cacheSize: 0
       )
@@ -33,9 +33,38 @@ module RunScripts
       )
     end
     
-    def perSet_misses
+    def perSet_misses_spec
       single_qsub(
         cacheSize: 1024
+      )
+    end
+    
+    def cache_misses_openssl
+      single_qsub(
+        cacheSize: 0,
+        benchmarks: $openssl
+      )
+      
+      single_qsub(
+        cacheSize: 512,
+        benchmarks: $openssl
+      )
+      
+      single_qsub(
+        cacheSize: 1024,
+        benchmarks: $openssl
+      )
+      
+      single_qsub(
+        cacheSize: 2048,
+        benchmarks: $openssl
+      )
+    end
+    
+    def perSet_misses_spec
+      single_qsub(
+        cacheSize: 1024,
+        benchmarks: $openssl
       )
     end
       

@@ -7,6 +7,7 @@ module RunScripts
 #directories
 $gem5home = Dir.new(Dir.pwd)
 $specint_dir = (Dir.pwd+"/benchmarks/spec2k6bin/specint")
+$openssl_dir = (Dir.pwd+"/tests/openssl-1.0.1g/test")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
@@ -42,8 +43,31 @@ $synthinvoke = {
 }
 $synthb = $synthinvoke.keys.sort
 
+$opensslinvoke = {
+    "AES"          => "'#{$openssl_dir}/asn1test'",
+    "Blowfish"     => "'#{$openssl_dir}/bftest'",
+    "CAST5"        => "'#{$openssl_dir}/casttest'",
+    "DES"          => "'#{$openssl_dir}/destest'",
+    "HMAC-MD5"     => "'#{$openssl_dir}/hmactest'",
+    "IDEA"         => "'#{$openssl_dir}/ideatest'",
+    "RC2"          => "'#{$openssl_dir}/rc2test'",
+    "RC4"          => "'#{$openssl_dir}/rc4test'",
+    "RC5"          => "'#{$openssl_dir}/rc5test'",
+    "MD2"          => "'#{$openssl_dir}/md2test'",
+    "MD4"          => "'#{$openssl_dir}/md4test'",
+    "MD5"          => "'#{$openssl_dir}/md5test'",
+    "MDC-2"        => "'#{$openssl_dir}/mdc2test'",
+    "RSA"          => "'#{$openssl_dir}/rsa_test'",
+    "SHA-0"        => "'#{$openssl_dir}/shatest'",
+    "SHA-1"        => "'#{$openssl_dir}/sha1test'",
+    "SHA-256-224"  => "'#{$openssl_dir}/sha256t'",
+    "SHA-512-384"  => "'#{$openssl_dir}/sha512t'",
+    "Whirlpool"    => "'#{$openssl_dir}/wp_test'",
+}
+$openssl = $opensslinvoke.keys.sort
+
 def invoke( name )
-    $specinvoke[name] || $synthinvoke[name]
+    $specinvoke[name] || $synthinvoke[name] || $opensslinvoke[name]
 end
 
 def sav_script( cpu, scheme, p0, options = {} ) 
@@ -105,6 +129,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --cpu-type=#{cpu} \\")
     script.puts("    --dynamic_cache \\") if scheme == "dc"
     script.puts("    --print_misses \\") if options[:print_misses]
+    script.puts("    --print_perSet_misses \\") if options[:print_perSet_misses]
     script.puts("    --caches \\")
     script.puts("    --l2cache \\")
     unless cacheSize == 0
@@ -192,8 +217,9 @@ def single opts={}
         threads: 4,
         l3config: "private",
         print_misses: true,
+        print_perSet_misses: true,
         fastforward: 0,
-        maxinsts: 10**9,
+        maxinsts: 2*10**9,
     }.merge opts
 
     f = []
