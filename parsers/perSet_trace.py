@@ -11,23 +11,27 @@ from os import walk
 def genTrace(input_filename):
     print "Parsing " + input_filename
     # output filename
-    output_filename = input_filename.split('.')[0] + "_total_misses.trc"
+    output_filename = input_filename.split('.')[0] + "_perSet_misses.trc"
     # open input file
     inputfile = open(input_filename, "r")
     # open output file
     outputfile = open(output_filename, "w")
     # read lines from input file
-    linePattern = "Miss count"
-    lineCount = 0
+    linePattern = "Set "
     for line in inputfile:
         searchResult = line.find(linePattern)
         if searchResult != -1:
+            index = line.split(' ')[1]
             missCount = line.split(' ')[-1]
+            missCount = missCount[:-1]
             try:
+                int(index)
                 int(missCount)
-                lineCount += 1
-                outputfile.write("%s %s" % (lineCount, missCount))
-            except ValueError:          
+                outputfile.write(missCount+" ")
+                if index == '1023':
+                    outputfile.write("\n")
+            except ValueError:
+                print index          
                 print missCount
                 
     inputfile.close()
@@ -52,6 +56,8 @@ for (dirpath, dirnames, filenames) in walk(folder):
     f.extend(filenames)
     break
 # generate traces for all the files
+p = re.compile('c1024kB')
 for file in f:
-    if file[-3:] != 'trc':
-        genTrace(folder+file)
+    if p.search(file):
+        if file[-3:] != 'trc':
+            genTrace(folder+file)
