@@ -182,10 +182,10 @@ class BaseCache : public MemObject
       public:
 
         /** Do not accept any new requests. */
-        void setBlocked();
+        virtual void setBlocked(int threadID);
 
         /** Return to normal operation and accept new requests. */
-        void clearBlocked();
+        virtual void clearBlocked(int threadID);
 
       protected:
 
@@ -199,7 +199,7 @@ class BaseCache : public MemObject
 
         bool mustSendRetry;
 
-      private:
+      public:
 
         EventWrapper<SlavePort, &SlavePort::sendRetry> sendRetryEvent;
 
@@ -222,7 +222,7 @@ class BaseCache : public MemObject
         MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
 
         if (mq->isFull()) {
-            setBlocked((BlockedCause)mq->index);
+            setBlocked((BlockedCause)mq->index, pkt->threadID);
         }
 
         if (requestBus) {
@@ -250,7 +250,7 @@ class BaseCache : public MemObject
         bool wasFull = mq->isFull();
         mq->markInService(mshr, pkt);
         if (wasFull && !mq->isFull()) {
-            clearBlocked((BlockedCause)mq->index);
+            clearBlocked((BlockedCause)mq->index, pkt->threadID);
         }
     }
 
@@ -514,13 +514,13 @@ class BaseCache : public MemObject
      * also sets the blocked flag in the slave interface.
      * @param cause The reason for the cache blocking.
      */
-    void setBlocked(BlockedCause cause)
+    virtual void setBlocked(BlockedCause cause, int threadID)
     {
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
             blocked_causes[cause]++;
             blockedCycle = curTick();
-            cpuSidePort->setBlocked();
+            cpuSidePort->setBlocked(threadID);
         }
         blocked |= flag;
         DPRINTF(Cache,"Blocking for cause %d, mask=%d\n", cause, blocked);
@@ -533,14 +533,14 @@ class BaseCache : public MemObject
      * @warning Calling this function can cause a blocked request on the bus to
      * access the cache. The cache must be in a state to handle that request.
      */
-    void clearBlocked(BlockedCause cause)
+    virtual void clearBlocked(BlockedCause cause, int threadID)
     {
         uint8_t flag = 1 << cause;
         blocked &= ~flag;
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
             blocked_cycles[cause] += curTick() - blockedCycle;
-            cpuSidePort->clearBlocked();
+            cpuSidePort->clearBlocked(threadID);
         }
     }
 

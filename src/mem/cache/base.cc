@@ -98,7 +98,7 @@ BaseCache::printMisses()
 }
 
 void
-BaseCache::CacheSlavePort::setBlocked()
+BaseCache::CacheSlavePort::setBlocked(int threadID)
 {
     assert(!blocked);
     DPRINTF(CachePort, "Cache port %s blocking new requests\n", name());
@@ -106,7 +106,7 @@ BaseCache::CacheSlavePort::setBlocked()
 }
 
 void
-BaseCache::CacheSlavePort::clearBlocked()
+BaseCache::CacheSlavePort::clearBlocked(int threadID)
 {
     assert(blocked);
     DPRINTF(CachePort, "Cache port %s accepting new requests\n", name());

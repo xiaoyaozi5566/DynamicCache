@@ -112,7 +112,7 @@ class Cache : public BaseCache
      */
     class CpuSidePort : public CacheSlavePort
     {
-      private:
+      protected:
 
         // a pointer to our specific cache implementation
         Cache<TagStore> *cache;

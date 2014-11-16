@@ -279,7 +279,7 @@ Cache<TagStore>::squash(int threadNum)
     }
     mshrQueue.squash(threadNum);
     if (unblock && !mshrQueue.isFull()) {
-        clearBlocked(cause);
+        clearBlocked(cause, threadNum);
     }
 }
 
@@ -586,7 +586,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             mshr->allocateTarget(pkt, time, order++);
             if (mshr->getNumTargets() == numTarget) {
                 noTargetMSHR = mshr;
-                setBlocked(Blocked_NoTargets);
+                setBlocked(Blocked_NoTargets, pkt->threadID);
                 // need to be careful with this... if this mshr isn't
                 // ready yet (i.e. time > curTick()_, we don't want to
                 // move it ahead of mshrs that are ready
@@ -909,7 +909,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 
     if (mshr == noTargetMSHR) {
         // we always clear at least one target
-        clearBlocked(Blocked_NoTargets);
+        clearBlocked(Blocked_NoTargets, pkt->threadID);
         noTargetMSHR = NULL;
     }
 
@@ -1050,7 +1050,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     } else {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
-            clearBlocked((BlockedCause)mq->index);
+            clearBlocked((BlockedCause)mq->index, pkt->threadID);
         }
     }
 
@@ -1876,7 +1876,9 @@ template<class TagStore>
 SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
     : SplitMSHRCache<TagStore>( p, tags )
 {
-
+	blocked_array = new uint64_t[p->num_tcs];
+	for (int i = 0; i < p->num_tcs; i++)
+		blocked_array = 0;
     this->cpuSidePort = new SRCpuSidePort(p->name + ".cpu_side", this,
                                   "CpuSidePort");
 }
@@ -2185,7 +2187,7 @@ DirtyCache<TagStore>::timingAccess(PacketPtr pkt)
             mshr->allocateTarget(pkt, time, this->order++);
             if (mshr->getNumTargets() == this->numTarget) {
                 this->noTargetMSHR = mshr;
-                this->setBlocked(this->Blocked_NoTargets);
+                this->setBlocked(this->Blocked_NoTargets, pkt->threadID);
                 // need to be careful with this... if this mshr isn't
                 // ready yet (i.e. time > curTick()_, we don't want to
                 // move it ahead of mshrs that are ready
@@ -2267,7 +2269,7 @@ DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
 
     if (mshr == this->noTargetMSHR) {
         // we always clear at least one target
-        this->clearBlocked(this->Blocked_NoTargets);
+        this->clearBlocked(this->Blocked_NoTargets, pkt->threadID);
         this->noTargetMSHR = NULL;
     }
 
@@ -2408,7 +2410,7 @@ DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
     } else {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
-            this->clearBlocked((BaseCache::BlockedCause)mq->index);
+            this->clearBlocked((BaseCache::BlockedCause)mq->index, pkt->threadID);
         }
     }
 
