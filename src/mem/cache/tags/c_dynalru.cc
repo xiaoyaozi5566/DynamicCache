@@ -58,6 +58,8 @@ C_DYNALRU::init_sets(){
                 blk->isTouched = false;
                 blk->size = blkSize;
                 blk->set = i;
+				// initialize the threadID
+				blk->threadID = tc;
                 sets[tc][i].blks[j]=blk;
             }
         }
@@ -86,7 +88,7 @@ C_DYNALRU::inc_size(){
 		// append the new blk from High partition
 		sets[0][i].blks[L_assoc-1] = sets[1][i].blks[H_assoc];
 		// mark as dirty to hide the "dirty" bit
-		sets[0][i].blks[L_assoc-1]->status |= BlkDirty;
+		// sets[0][i].blks[L_assoc-1]->status |= BlkDirty;
 		
 		// decrease the size of H partition
 		sets[1][i].assoc = H_assoc;

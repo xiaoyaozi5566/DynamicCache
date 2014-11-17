@@ -219,6 +219,8 @@ LRU::insertBlock(Addr addr, BlkType *blk, int master_id, uint64_t tid)
 
     // Set tag for new block.  Caller is responsible for setting status.
     blk->tag = extractTag(addr);
+	// update the threadID of the new block
+	blk->threadID = tid;
 
     // deal with what we are bringing in
     assert(master_id < cache->system->maxMasters());

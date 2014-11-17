@@ -1063,7 +1063,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     // if we used temp block, clear it out
     if (blk == tempBlock) {
         if (blk->isDirty()) {
-            allocateWriteBuffer(writebackBlk(blk, pkt->threadID), time, true);
+            allocateWriteBuffer(writebackBlk(blk, blk->threadID), time, true);
         }
         blk->status &= ~BlkValid;
         tags->invalidateBlk( blk, pkt->threadID );
@@ -1107,7 +1107,7 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks, uint64_t tid)
 
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
-        MSHR *repl_mshr = getMSHRQueue( tid )->findMatch(repl_addr);
+        MSHR *repl_mshr = getMSHRQueue( blk->threadID )->findMatch(repl_addr);
         if (repl_mshr) {
             // must be an outstanding upgrade request on block
             // we're about to replace...
@@ -1123,7 +1123,7 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks, uint64_t tid)
 
             if (blk->isDirty()) {
                 // Save writeback packet for handling by caller
-                writebacks.push_back(writebackBlk(blk, tid));
+                writebacks.push_back(writebackBlk(blk, blk->threadID));
             }
         }
     }
@@ -1914,10 +1914,14 @@ C_DynamicCache<TagStore>::adjustPartition()
 		// write back if the block is dirty
 		for(unsigned i = 0; i < numSets; i++){
 			BlkType *tempBlk = this->tags->get_evictBlk(i);
-			if(tempBlk->isDirty() && tempBlk->isValid())
-				this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
-			else
+			if (tempBlk->threadID == 0){
+				if(tempBlk->isDirty() && tempBlk->isValid())
+					this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
+				
 				this->tags->invalidateBlk(tempBlk, 1);
+				
+				tempBlk->threadID = 1;	
+			}	
 		}
 	}
 	// Reset miss count
@@ -1954,8 +1958,8 @@ F_DynamicCache<TagStore>::adjustPartition()
 		if(tempBlk == NULL) continue;
 		if(tempBlk->isDirty() && tempBlk->isValid())
 			this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
-		else
-			this->tags->invalidateBlk(tempBlk, 0);
+
+		this->tags->invalidateBlk(tempBlk, 0);
 	}
 	// Reset miss count
 	this->missCounter = 0;
@@ -2423,7 +2427,7 @@ DirtyCache<TagStore>::handleResponse(PacketPtr pkt)
     // if we used temp block, clear it out
     if (blk == this->tempBlock) {
         if (blk->isDirty()) {
-            this->allocateWriteBuffer(this->writebackBlk(blk, pkt->threadID), time, true);
+            this->allocateWriteBuffer(this->writebackBlk(blk, blk->threadID), time, true);
         }
         blk->status &= ~BlkValid;
         this->tags->invalidateBlk( blk, pkt->writeLabel );
