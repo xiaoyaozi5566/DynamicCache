@@ -69,12 +69,12 @@ C_DYNALRU::init_sets(){
 // increase the size of Low partition
 void
 C_DYNALRU::inc_size(){
-	if(H_assoc == 0) return;
+	if(H_assoc == 1) return;
 	
 	L_assoc += 1;
 	H_assoc -= 1;
 	
-	printf("L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
+	fprintf(stderr, "L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
 	
 	for( unsigned i = 0; i < numSets; i++){
 		// increase the size of L partition
@@ -103,12 +103,12 @@ C_DYNALRU::inc_size(){
 
 unsigned 
 C_DYNALRU::dec_size(){
-	if(L_assoc == 0) return 0;
+	if(L_assoc == 1) return 0;
 	
 	L_assoc -= 1;
 	H_assoc += 1;
 	
-	printf("L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
+	fprintf(stderr, "L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
 	
 	for( unsigned i = 0; i < numSets; i++){
 		// increase the size of H partition

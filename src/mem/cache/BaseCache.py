@@ -76,5 +76,6 @@ class BaseCache(MemObject):
     print_misses   = Param.Bool(False, "print the misses")
     print_perSet_misses = Param.Bool(False, "print per set misses")
     time_interval  = Param.Int(500000000, "Time interval to change partition size")
-    threshold_inc  = Param.Int(200, "threshold that indicates Low partition should increase")
-    threshold_dec  = Param.Int(20, "threshold that indicates Low partition should decrease")
+    threshold_inc  = Param.Float(0.001, "threshold that indicates Low partition should increase")
+    threshold_dec  = Param.Float(-0.001, "threshold that indicates Low partition should decrease")
+    window_size    = Param.Int(20, "Window size for moving average")

@@ -14,8 +14,8 @@ F_DYNALRU::F_DYNALRU( unsigned _numSets,
         unsigned _hit_latency)
     : LRU(_numSets, _blkSize, _assoc, _hit_latency )
 {
-	L_assoc = _assoc/2;
-	H_assoc = _assoc - L_assoc;
+	L_assoc = _assoc - 1;
+	H_assoc = 1;
 	init_sets();
 }
 

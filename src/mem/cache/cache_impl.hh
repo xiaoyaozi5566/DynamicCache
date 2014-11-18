@@ -1894,6 +1894,10 @@ C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
 	interval = p->time_interval;
 	th_inc = p->threshold_inc;
 	th_dec = p->threshold_dec;
+	window_size = p->window_size;
+	miss_history = new uint64_t[window_size];
+	for (int i = 0; i < window_size; i++)
+		miss_history[i] = 0;
 	this->schedule(adjustEvent, interval);
 }
 
@@ -1901,29 +1905,44 @@ template<class TagStore>
 void
 C_DynamicCache<TagStore>::adjustPartition()
 {
-	printf("change partition at cycle %llu\n", (unsigned long long)curTick());
-	printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
-	// Change the partition size based on # of misses
-	if(this->missCounter > th_inc) { 
-		printf("increase L partition size\n");
-		this->tags->inc_size();
+	//printf("change partition at cycle %llu\n", (unsigned long long)curTick());
+	//printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
+	uint64_t index = curTick()/interval - 1;
+	if (index < window_size) {
+		miss_history[index] = this->missCounter;
 	}
-	else if (this->missCounter < th_dec) {
-		printf("decrease L partition size\n");
-		unsigned numSets = this->tags->dec_size();
-		// write back if the block is dirty
-		for(unsigned i = 0; i < numSets; i++){
-			BlkType *tempBlk = this->tags->get_evictBlk(i);
-			if (tempBlk->threadID == 0){
-				if(tempBlk->isDirty() && tempBlk->isValid())
-					this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
-				
-				this->tags->invalidateBlk(tempBlk, 1);
-				
-				tempBlk->threadID = 1;	
-			}	
+	else 
+	{
+		uint64_t pre_avg, curr_avg;
+		float ratio = 0;
+		pre_avg = array_avg(miss_history, window_size);
+		update_history(miss_history, window_size, this->missCounter);
+		curr_avg = array_avg(miss_history, window_size);
+		// Calculate the change ratio
+		if (pre_avg != 0) ratio = curr_avg*1.0/pre_avg - 1;
+		// Change the partition size based on # of misses
+		if(pre_avg == 0 || curr_avg == 0 || ratio < th_dec) { 
+			// printf("decrease L partition size\n");
+			unsigned numSets = this->tags->dec_size();
+			// write back if the block is dirty
+			for(unsigned i = 0; i < numSets; i++){
+				BlkType *tempBlk = this->tags->get_evictBlk(i);
+				if (tempBlk->threadID == 0){
+					if(tempBlk->isDirty() && tempBlk->isValid())
+						this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
+					
+					this->tags->invalidateBlk(tempBlk, 1);
+					
+					tempBlk->threadID = 1;	
+				}	
+			}
 		}
+		else if (ratio > th_inc) {
+			// printf("increase L partition size\n");
+			this->tags->inc_size();
+		}	
 	}
+
 	// Reset miss count
 	this->missCounter = 0;
 	// Schedule the next partition size adjust event
@@ -1948,8 +1967,8 @@ template<class TagStore>
 void
 F_DynamicCache<TagStore>::adjustPartition()
 {
-	printf("change partition at cycle %llu\n", (unsigned long long)curTick());
-	printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
+	// printf("change partition at cycle %llu\n", (unsigned long long)curTick());
+	// printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
 	// adjust the cache size based on the usage of cache sets
 	unsigned numSets = this->tags->dec_size();
 	// invalidate the cacheline with threadID 1000, reset used bit
