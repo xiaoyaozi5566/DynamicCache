@@ -70,6 +70,7 @@ class BaseCache(MemObject):
     dirty_cache    = Param.Bool(False, "Use dirty cache implementation")
     c_dynamic_cache = Param.Bool(False, "Use coarse-grained dynamic cache implementation")
     f_dynamic_cache = Param.Bool(False, "Use fine-grained dynamic cache implementation")
+    static_cache   = Param.Bool(False, "Use static partitioning")
     split_mshrq    = Param.Bool(False, "Use MSHR Queue per TC?")
     split_rport    = Param.Bool(False, "Use Split Response Port Queue per TC?")
     cw_first       = Param.Bool(True, "Use critical word first timing")

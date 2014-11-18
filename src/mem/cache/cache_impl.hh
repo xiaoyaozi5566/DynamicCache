@@ -1898,7 +1898,7 @@ C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
 	miss_history = new uint64_t[window_size];
 	for (int i = 0; i < window_size; i++)
 		miss_history[i] = 0;
-	this->schedule(adjustEvent, interval);
+	if(!p->static_cache) this->schedule(adjustEvent, interval);
 }
 
 template<class TagStore>
