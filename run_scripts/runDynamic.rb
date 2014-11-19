@@ -15,7 +15,7 @@ $fastforward = 10**9
 $maxinsts = 10**8
 $maxtick = 2*10**15 
 $cpus = %w[timing detailed] #timing is also available
-$schemes = %w[dc]
+$schemes = %w[static c_dynamic f_dynamic]
 
 #benchmarks
 $specinvoke = { 
@@ -74,7 +74,7 @@ def sav_script( cpu, scheme, p0, options = {} )
 
     options = {
         l3config: "shared",
-        cacheSize: 4096,
+        cacheSize: 2048,
         runmode: :qsub,
         maxinsts: $maxinsts,
         fastforward: $fastforward,
@@ -123,11 +123,14 @@ def sav_script( cpu, scheme, p0, options = {} )
     script = File.new($scriptgen_dir.path+"/run_#{filename}","w+")
     script.puts("#!/bin/bash")
     script.puts("build/ARM/gem5.fast \\") unless debug
-    script.puts("build/ARM/gem5.debug \\") if debug 
+    script.puts("build/ARM/gem5.debug \\") if debug
+    script.puts("    --remote-gdb-port=0 \\")
     script.puts("    --stats-file=#{filename}_stats.txt \\")
     script.puts("    configs/dramsim2/dynamic_cache.py \\")
     script.puts("    --cpu-type=#{cpu} \\")
-    script.puts("    --dynamic_cache \\") if scheme == "dc"
+    script.puts("    --c_dynamic_cache \\") if scheme == "c_dynamic" || scheme == "static"
+    script.puts("    --f_dynamic_cache \\") if scheme == "f_dynamic"
+    script.puts("    --static_cache \\") if scheme == "static"
     script.puts("    --print_misses \\") if options[:print_misses]
     script.puts("    --print_perSet_misses \\") if options[:print_perSet_misses]
     script.puts("    --caches \\")

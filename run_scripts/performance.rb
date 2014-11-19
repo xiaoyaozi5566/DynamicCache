@@ -155,5 +155,12 @@ module RunScripts
         p3threadID: 1
       )
     end
+    
+    def performance
+      qsub_fast(
+      maxinsts: 2*10**9,
+      cpus: %w[detailed]
+      )
+    end
 
 end
