@@ -70,7 +70,7 @@ unsigned
 F_DYNALRU::dec_size(){
 	for( unsigned i = 0; i < numSets; i++){
 		// Search backwards to evict the LRU first
-		for( unsigned j = L_assoc - 1; j >= 0; j--){
+		for( int j = L_assoc - 1; j >= 0; j--){
 			BlkType *tempBlk = sets[0][i].blks[j];
 			// Found a cacheline in Low partition that hasn't been used, should evict
 			if (tempBlk->threadID == 0 && tempBlk->isTouched == false && tempBlk->isValid()){
