@@ -43,6 +43,7 @@ protected:
 		array[count-1] = curr_misses;
 	}
 	
+	void dec_size();
 	
 	EventWrapper<C_DynamicCache<TagStore>, &C_DynamicCache<TagStore>::adjustPartition> adjustEvent;
 	
@@ -55,6 +56,10 @@ private:
 	uint64_t window_size;
 	// Moving average
 	uint64_t *miss_history;
+	// Explore flag and stable flag
+	bool explore_phase, explore_inc, explore_dec, stable_phase;
+	// Stable length
+	uint64_t stable_length, stable_counter;
 	// protected:
 	//     virtual bool access(PacketPtr pkt, BlkType *&blk,
 	//                 int &lat, PacketList &writebacks);

@@ -1895,6 +1895,13 @@ C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
 	th_inc = p->threshold_inc;
 	th_dec = p->threshold_dec;
 	window_size = p->window_size;
+	explore_phase = true;
+	explore_inc = false;
+	explore_dec = false;
+	stable_phase = false;
+	// stable phase lasts for stable_length million cycles
+	stable_length = p->stable_length;
+	stable_counter = 0;
 	miss_history = new uint64_t[window_size];
 	for (int i = 0; i < window_size; i++)
 		miss_history[i] = 0;
@@ -1920,33 +1927,87 @@ C_DynamicCache<TagStore>::adjustPartition()
 		curr_avg = array_avg(miss_history, window_size);
 		// Calculate the change ratio
 		if (pre_avg != 0) ratio = curr_avg*1.0/pre_avg - 1;
-		// Change the partition size based on # of misses
-		if(pre_avg == 0 || curr_avg == 0 || ratio < th_dec) { 
-			// printf("decrease L partition size\n");
-			unsigned numSets = this->tags->dec_size();
-			// write back if the block is dirty
-			for(unsigned i = 0; i < numSets; i++){
-				BlkType *tempBlk = this->tags->get_evictBlk(i);
-				if (tempBlk->threadID == 0){
-					if(tempBlk->isDirty() && tempBlk->isValid())
-						this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
-					
-					this->tags->invalidateBlk(tempBlk, 1);
-					
-					tempBlk->threadID = 1;	
-				}	
+		
+		if (stable_phase){
+			// Reach the end of stable phase
+			if (stable_counter == stable_length){
+				stable_phase = false;
+				explore_phase = true;
+				stable_counter = 0;
+			}
+			else{
+				stable_counter++;
 			}
 		}
-		else if (ratio > th_inc) {
-			// printf("increase L partition size\n");
+		else if (explore_phase) {
 			this->tags->inc_size();
-		}	
+			explore_phase = false;
+		}
+		else{
+			if (explore_inc == false && explore_dec == false){
+				if (ratio < th_inc) {
+					explore_inc = true;
+					this->tags->inc_size();
+				}
+				else {
+					explore_dec = true;
+					dec_size();
+				}
+			}
+			else if (explore_inc == true){
+				if (ratio < th_inc) {
+					this->tags->inc_size();
+				}
+				// stop increasing
+				else{
+					// go back to previous partition size
+					dec_size();
+					
+					explore_phase = false;
+					stable_phase = true;
+					explore_inc = false;
+					explore_dec = false;
+				}
+			}
+			else if (explore_dec == true){
+				if (ratio < th_dec) {
+					dec_size();
+				}
+				else{
+					// go back to previous partition size
+					this->tags->inc_size();
+					
+					explore_phase = false;
+					stable_phase = true;
+					explore_inc = false;
+					explore_dec = false;
+				}
+			}
+		}
 	}
 
 	// Reset miss count
 	this->missCounter = 0;
 	// Schedule the next partition size adjust event
 	this->schedule(adjustEvent, curTick()+interval);
+}
+
+template<class TagStore>
+void
+C_DynamicCache<TagStore>::dec_size(){
+	unsigned numSets = this->tags->dec_size();
+	// write back if the block is dirty
+	for(unsigned i = 0; i < numSets; i++){
+		BlkType *tempBlk = this->tags->get_evictBlk(i);
+		if (tempBlk->threadID == 0){
+			if(tempBlk->isDirty() && tempBlk->isValid())
+				this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
+	
+			this->tags->invalidateBlk(tempBlk, 1);
+	
+			tempBlk->threadID = 1;	
+		}	
+	}
 }
 
 //-----------------------------------------------------------------------------
