@@ -216,7 +216,7 @@ np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = SimpleMemory(range=AddrRange("4096MB")),
                 membus = NoncoherentBus(), mem_mode = test_mem_mode,
-                fixAddr = options.fixaddr)
+                fixAddr = options.fixaddr, numPids = options.numpids)
 
 # Sanity check
 if options.fastmem and (options.caches or options.l2cache):

@@ -96,12 +96,18 @@ System::System(Params *p)
     systemList.push_back(this);
 
     is_fast_forward = p->fast_forward;
+
+	int mem_end = physmem.totalSize() >> LogVMPageSize;
+    //int partition_size = (mem_end + p->numPids - 1) / p->numPids;
+    int partition_size = mem_end / p->numPids;
+
+    pagePtr = new Addr[p->numPids];
+    for( int i=0; i < p->numPids; i++ ){
+      pagePtr[i] = i * partition_size;
+    }
     
-    pagePtr[0] = 0;
-    pagePtr[2] = (physmem.totalSize() >> (LogVMPageSize + 1));
-    pagePtr[1] = pagePtr[2] >> 1;
-    pagePtr[3] = pagePtr[1] + pagePtr[2];
     fixAddr = p->fixAddr;
+	numPids = p->numPids;
 
     if (FullSystem) {
         kernelSymtab = new SymbolTable;
@@ -316,7 +322,7 @@ System::allocPhysPages(int npages, int pid)
 	if( fixAddr ) {
 		Addr return_addr = pagePtr[pid] << LogVMPageSize;
 		pagePtr[pid] += npages;
-		if ((pagePtr[pid] << LogVMPageSize) > (physmem.totalSize()*(pid+1)/4))
+		if ((pagePtr[pid] << LogVMPageSize) > (physmem.totalSize()*(pid+1)/_params->numPids))
 			fatal("Out of memory, please increase size of physical memory.");
 		return return_addr;
 	}
@@ -338,8 +344,14 @@ System::memSize() const
 Addr
 System::freeMemSize() const
 {
-	if( fixAddr ) 
-	   return physmem.totalSize()*3 - ((pagePtr[0] + pagePtr[1] + pagePtr[2] + pagePtr[3]) << LogVMPageSize);
+	if( fixAddr ) {
+		Addr freeMem = 0;
+		int partition_size = physmem.totalSize() / numPids;
+		for (int i = 0; i < numPids; i++) {
+			freeMem += partition_size*(i+1) - (pagePtr[i] << LogVMPageSize);
+		}
+		return freeMem;
+	}
 	else
 	   return physmem.totalSize() - (pagePtr[0] << LogVMPageSize);
 }
@@ -362,7 +374,7 @@ System::serialize(ostream &os)
 {
     if (FullSystem)
         kernelSymtab->serialize("kernel_symtab", os);
-    for (uint32_t i = 0; i < 4; i++)
+    for (uint32_t i = 0; i < numPids; i++)
     	SERIALIZE_SCALAR(pagePtr[i]);
     SERIALIZE_SCALAR(nextPID);
 }
@@ -373,7 +385,7 @@ System::unserialize(Checkpoint *cp, const string &section)
 {
     if (FullSystem)
         kernelSymtab->unserialize("kernel_symtab", cp, section);
-    for (uint32_t i = 0; i < 4; i++)
+    for (uint32_t i = 0; i < numPids; i++)
     	UNSERIALIZE_SCALAR(pagePtr[i]);
     UNSERIALIZE_SCALAR(nextPID);
 }

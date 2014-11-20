@@ -159,8 +159,9 @@ class System : public MemObject
      * system.  These threads could be Active or Suspended. */
     int numRunningContexts();
 
-    Addr pagePtr[4];
+    Addr *pagePtr;
     bool fixAddr;
+	uint64_t numPids;
 
     uint64_t init_param;
 
