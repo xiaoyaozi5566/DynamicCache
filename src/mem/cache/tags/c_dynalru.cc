@@ -74,7 +74,7 @@ C_DYNALRU::inc_size(){
 	L_assoc += 1;
 	H_assoc -= 1;
 	
-	fprintf(stderr, "L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
+	fprintf(stderr, "L_assoc = %2d H_assoc = %2d\n", L_assoc, H_assoc);
 	
 	for( unsigned i = 0; i < numSets; i++){
 		// increase the size of L partition
@@ -108,7 +108,7 @@ C_DYNALRU::dec_size(){
 	L_assoc -= 1;
 	H_assoc += 1;
 	
-	fprintf(stderr, "L_assoc = %d\nH_assoc = %d\n", L_assoc, H_assoc);
+	fprintf(stderr, "L_assoc = %2d H_assoc = %2d\n", L_assoc, H_assoc);
 	
 	for( unsigned i = 0; i < numSets; i++){
 		// increase the size of H partition
