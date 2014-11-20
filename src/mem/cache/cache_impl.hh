@@ -1905,7 +1905,8 @@ C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
 	miss_history = new uint64_t[window_size];
 	for (int i = 0; i < window_size; i++)
 		miss_history[i] = 0;
-	if(!p->static_cache) this->schedule(adjustEvent, interval);
+	// add skew to avoid some event conflicts
+	if(!p->static_cache) this->schedule(adjustEvent, 52+interval);
 }
 
 template<class TagStore>
@@ -2021,7 +2022,7 @@ F_DynamicCache<TagStore>::F_DynamicCache( const Params *p, TagStore *tags )
 	interval = p->time_interval;
 	th_inc = p->threshold_inc;
 	th_dec = p->threshold_dec;
-	this->schedule(adjustEvent, interval);
+	this->schedule(adjustEvent, 52+interval);
 }
 
 template<class TagStore>
