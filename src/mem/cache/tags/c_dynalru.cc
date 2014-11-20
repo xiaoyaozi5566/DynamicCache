@@ -11,10 +11,11 @@
 C_DYNALRU::C_DYNALRU( unsigned _numSets,
         unsigned _blkSize,
         unsigned _assoc,
-        unsigned _hit_latency)
+        unsigned _hit_latency,
+		unsigned _L_assoc)
     : LRU(_numSets, _blkSize, _assoc, _hit_latency )
 {
-	L_assoc = _assoc/2;
+	L_assoc = _L_assoc;
 	H_assoc = _assoc - L_assoc;
 	init_sets();
 }

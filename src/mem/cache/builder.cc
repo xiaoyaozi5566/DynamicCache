@@ -103,7 +103,7 @@ using namespace std;
 #define BUILD_LRU_CACHE do {                                            \
         LRU *tags;                                                      \
 		if( c_dynamic_cache )                                              \
-			tags = new C_DYNALRU( numSets, block_size, assoc, latency ); \
+			tags = new C_DYNALRU( numSets, block_size, assoc, latency, L_assoc ); \
 		else if( f_dynamic_cache )                                              \
 			tags = new F_DYNALRU( numSets, block_size, assoc, latency ); \
 		else if( dirty_cache )                                              \

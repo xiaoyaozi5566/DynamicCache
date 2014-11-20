@@ -15,7 +15,7 @@ $fastforward = 10**9
 $maxinsts = 10**8
 $maxtick = 2*10**15 
 $cpus = %w[timing detailed] #timing is also available
-$schemes = %w[static c_dynamic f_dynamic]
+$schemes = %w[static static0 static25 static75 static100 c_dynamic f_dynamic]
 
 #benchmarks
 $specinvoke = { 
@@ -66,8 +66,15 @@ $opensslinvoke = {
 }
 $openssl = $opensslinvoke.keys.sort
 
+$staticinvoke = {
+    "static0"    => "1",
+    "static25"   => "4",
+    "static75"   => "12",
+    "static100"  => "15",
+}
+
 def invoke( name )
-    $specinvoke[name] || $synthinvoke[name] || $opensslinvoke[name]
+    $specinvoke[name] || $synthinvoke[name] || $opensslinvoke[name] || $staticinvoke[name]
 end
 
 def sav_script( cpu, scheme, p0, options = {} ) 
@@ -128,9 +135,10 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --stats-file=#{filename}_stats.txt \\")
     script.puts("    configs/dramsim2/dynamic_cache.py \\")
     script.puts("    --cpu-type=#{cpu} \\")
-    script.puts("    --c_dynamic_cache \\") if scheme == "c_dynamic" || scheme == "static"
+    script.puts("    --c_dynamic_cache \\") if scheme != "f_dynamic"
     script.puts("    --f_dynamic_cache \\") if scheme == "f_dynamic"
-    script.puts("    --static_cache \\") if scheme == "static"
+    script.puts("    --static_cache \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
+    script.puts("    --L_assoc=#{invoke(scheme)} \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
     script.puts("    --print_misses \\") if options[:print_misses]
     script.puts("    --print_perSet_misses \\") if options[:print_perSet_misses]
     script.puts("    --caches \\")
@@ -168,6 +176,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     end
     puts "#{filename}".magenta if runmode == :local
     success = system "sh #{script_abspath}" if runmode == :local
+    #success = true
     [success,filename]
 end
 

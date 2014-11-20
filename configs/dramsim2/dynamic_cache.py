@@ -133,6 +133,10 @@ parser.add_option("--numpids", type="int", default=2,
         help="determine the number of PIDs")
 parser.add_option("--numcpus", type="int",
         help="determine the number of cpus")
+        
+if '--c_dynamic_cache' in sys.argv:
+    parser.add_option("--L_assoc", type="int", default=8,
+        help="associativity for Low partition")
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)
