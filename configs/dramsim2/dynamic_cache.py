@@ -116,6 +116,8 @@ parser.add_option("--dirty_cache", action="store_true")
 parser.add_option("--c_dynamic_cache", action="store_true")
 parser.add_option("--f_dynamic_cache", action="store_true")
 parser.add_option("--static_cache", action="store_true")
+parser.add_option("--fixaddr", action="store_true", default=False,
+		help="fixed the address mapping of each application")
 parser.add_option("--print_misses", action="store_true")
 parser.add_option("--print_perSet_misses", action="store_true")
 parser.add_option("--l2trace", action="store_true")
@@ -209,7 +211,8 @@ if options.smt and options.num_cpus > 1:
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
                 physmem = SimpleMemory(range=AddrRange("4096MB")),
-                membus = NoncoherentBus(), mem_mode = test_mem_mode)
+                membus = NoncoherentBus(), mem_mode = test_mem_mode,
+                fixAddr = options.fixaddr)
 
 # Sanity check
 if options.fastmem and (options.caches or options.l2cache):
