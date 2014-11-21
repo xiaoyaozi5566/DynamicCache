@@ -67,6 +67,7 @@ $opensslinvoke = {
 $openssl = $opensslinvoke.keys.sort
 
 $staticinvoke = {
+    "static"    => "8",
     "static0"    => "1",
     "static25"   => "4",
     "static75"   => "12",
@@ -135,6 +136,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --stats-file=#{filename}_stats.txt \\")
     script.puts("    configs/dramsim2/dynamic_cache.py \\")
     script.puts("    --cpu-type=#{cpu} \\")
+    script.puts("    --fixaddr \\") if options[:fixaddr]
     script.puts("    --c_dynamic_cache \\") if scheme != "f_dynamic"
     script.puts("    --f_dynamic_cache \\") if scheme == "f_dynamic"
     script.puts("    --static_cache \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
@@ -169,7 +171,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     FileUtils.mkdir_p( "stderr" ) unless File.directory?( "stderr" )
     FileUtils.mkdir_p( "stdout" ) unless File.directory?( "stdout" )
 
-    sleep(1)
+    sleep(2)
     
     if runmode == :qsub
         success = system "qsub -wd #{$gem5home.path} -e stderr/ -o stdout/ #{script_abspath}"
@@ -186,7 +188,7 @@ def iterate_and_submit opts={}, &block
         schemes: $schemes,
         benchmarks: $specint,
         runmode: :local,
-        threads: 4
+        threads: 1
     }.merge opts
 
     o[:otherbench] = o[:benchmarks] if o[:otherbench].nil?

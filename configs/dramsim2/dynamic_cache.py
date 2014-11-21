@@ -214,7 +214,7 @@ if options.smt and options.num_cpus > 1:
 
 np = options.num_cpus
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
-                physmem = SimpleMemory(range=AddrRange("4096MB")),
+                physmem = SimpleMemory(range=AddrRange("2048MB")),
                 membus = NoncoherentBus(), mem_mode = test_mem_mode,
                 fixAddr = options.fixaddr, numPids = options.numpids)
 
