@@ -12,10 +12,12 @@ C_DYNALRU::C_DYNALRU( unsigned _numSets,
         unsigned _blkSize,
         unsigned _assoc,
         unsigned _hit_latency,
-		unsigned _L_assoc)
+		unsigned _L_assoc,
+		unsigned _H_min)
     : LRU(_numSets, _blkSize, _assoc, _hit_latency )
 {
 	L_assoc = _L_assoc;
+	H_min = _H_min;
 	H_assoc = _assoc - L_assoc;
 	init_sets();
 }
@@ -70,7 +72,7 @@ C_DYNALRU::init_sets(){
 // increase the size of Low partition
 void
 C_DYNALRU::inc_size(){
-	if(H_assoc == 1) return;
+	if(H_assoc == H_min) return;
 	
 	L_assoc += 1;
 	H_assoc -= 1;

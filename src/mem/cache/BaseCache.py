@@ -36,6 +36,7 @@ class BaseCache(MemObject):
     type = 'BaseCache'
     assoc = Param.Int("associativity")
     L_assoc = Param.Int(8, "associativity for Low partition")
+    H_min = Param.Int(1, "minimal # of ways reserved for High partition")
     block_size = Param.Int("block size in bytes")
     latency = Param.Latency("Latency")
     hash_delay = Param.Cycles(1, "time in cycles of hash access")

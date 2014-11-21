@@ -135,6 +135,12 @@ parser.add_option("--numcpus", type="int",
         help="determine the number of cpus")
 parser.add_option("--L_assoc", type="int", default=8,
         help="associativity for Low partition")
+parser.add_option("--H_min", type="int", default=1,
+        help="minimal # of ways reserved for High")
+parser.add_option("--th_inc", type="float", default=-0.001,
+        help="threshold to increase the Low partition")
+parser.add_option("--th_dec", type="float", default=0.001,
+        help="threshold to decrease the Low partition")
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)

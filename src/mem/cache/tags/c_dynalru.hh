@@ -7,10 +7,11 @@ class C_DYNALRU : public LRU{
 private:
 		unsigned L_assoc;
 		unsigned H_assoc;
+		unsigned H_min;
 
     public:
     C_DYNALRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
-            unsigned _hit_latency, unsigned _L_assoc);
+            unsigned _hit_latency, unsigned _L_assoc, unsigned _H_min);
 	
 	virtual void inc_size();
 	virtual unsigned dec_size();
