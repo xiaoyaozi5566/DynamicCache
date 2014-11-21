@@ -94,6 +94,9 @@ def sav_script( cpu, scheme, p0, options = {} )
     p1         = options[:p1]
     p2         = options[:p2]
     p3         = options[:p3]
+    # options for c_dynamic cache
+    h_min      = options[:h_min]
+    th         = options[:th]
     # Results directory
     result_dir = options[:result_dir]
     # shared or private l3
@@ -114,7 +117,9 @@ def sav_script( cpu, scheme, p0, options = {} )
         options[:mmuDebug]
     
 
-    filename  = "#{scheme}_#{cpu}_#{p0}"
+    filename  = "#{scheme}"
+    filename += "_#{h_min}_#{th}" if scheme == "c_dynamic"
+    filename += "_#{cpu}_#{p0}"
     filename += "_#{p1}" unless p1.nil?
     filename += "_#{p2}" unless p2.nil?
     filename += "_#{p3}" unless p3.nil?
@@ -141,6 +146,9 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --f_dynamic_cache \\") if scheme == "f_dynamic"
     script.puts("    --static_cache \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
     script.puts("    --L_assoc=#{invoke(scheme)} \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
+    script.puts("    --H_min=#{h_min} \\") if scheme == "c_dynamic"
+    script.puts("    --th_inc=-0.00#{th} \\") if scheme == "c_dynamic"
+    script.puts("    --th_dec=0.00#{th} \\") if scheme == "c_dynamic"
     script.puts("    --print_misses \\") if options[:print_misses]
     script.puts("    --print_perSet_misses \\") if options[:print_perSet_misses]
     script.puts("    --caches \\")
@@ -170,15 +178,15 @@ def sav_script( cpu, scheme, p0, options = {} )
 
     FileUtils.mkdir_p( "stderr" ) unless File.directory?( "stderr" )
     FileUtils.mkdir_p( "stdout" ) unless File.directory?( "stdout" )
-
-    sleep(2)
+    
+    #sleep(2)
     
     if runmode == :qsub
         success = system "qsub -wd #{$gem5home.path} -e stderr/ -o stdout/ #{script_abspath}"
     end
     puts "#{filename}".magenta if runmode == :local
-    success = system "sh #{script_abspath}" if runmode == :local
-    #success = true
+    #success = system "sh #{script_abspath}" if runmode == :local
+    success = true
     [success,filename]
 end
 
@@ -188,7 +196,9 @@ def iterate_and_submit opts={}, &block
         schemes: $schemes,
         benchmarks: $specint,
         runmode: :local,
-        threads: 1
+        threads: 1,
+        h_mins: %w[4 8],
+        ths: %w[1 2 3],
     }.merge opts
 
     o[:otherbench] = o[:benchmarks] if o[:otherbench].nil?
@@ -207,7 +217,14 @@ def iterate_and_submit opts={}, &block
       o[:benchmarks].product(o[:otherbench]).each_slice(o[:threads]) do |i|
         threads=[]
         i.each do |p0,other|
-          threads << Thread.new { f << submit.call(cpu, scheme, o, p0, other).flatten }
+          if scheme == "c_dynamic"
+            o[:h_mins].product(o[:ths]).each do |h_min, th|
+              o.merge!(h_min: h_min, th: th) 
+             submit.call(cpu, scheme, o, p0, other).flatten 
+            end
+          else
+            submit.call(cpu, scheme, o, p0, other).flatten 
+          end  
         end
         threads.each { |t| t.join }
       end
