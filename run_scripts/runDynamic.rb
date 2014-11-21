@@ -6,8 +6,8 @@ require 'colored'
 module RunScripts
 #directories
 $gem5home = Dir.new(Dir.pwd)
-$specint_dir = (Dir.pwd+"/benchmarks/spec2k6bin/specint")
-$openssl_dir = (Dir.pwd+"/tests/openssl-1.0.1g/test")
+$specint_dir = ("benchmarks/spec2k6bin/specint")
+$openssl_dir = ("tests/openssl-1.0.1g/test")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
