@@ -159,8 +159,7 @@ module RunScripts
     def performance
       qsub_fast(
       maxinsts: 10**9,
-      fastforward: 10**9,
-      fixaddr: true,
+      fastforward: 0,
       cpus: %w[detailed]
       )
     end

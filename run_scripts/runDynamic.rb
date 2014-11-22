@@ -82,7 +82,7 @@ def sav_script( cpu, scheme, p0, options = {} )
 
     options = {
         l3config: "shared",
-        cacheSize: 2048,
+        cacheSize: 1024,
         runmode: :qsub,
         maxinsts: $maxinsts,
         fastforward: $fastforward,
