@@ -86,7 +86,8 @@ def sav_script( cpu, scheme, p0, options = {} )
         runmode: :qsub,
         maxinsts: $maxinsts,
         fastforward: $fastforward,
-        result_dir: "results"
+        result_dir: "results",
+        outdir: "default",
     }.merge options
 
     cacheSize  = options[:cacheSize]
@@ -138,6 +139,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("build/ARM/gem5.fast \\") unless debug
     script.puts("build/ARM/gem5.debug \\") if debug
     script.puts("    --remote-gdb-port=0 \\")
+    script.puts("    --outdir=m5out/#{options[:outdir]} \\")
     script.puts("    --stats-file=#{filename}_stats.txt \\")
     script.puts("    configs/dramsim2/dynamic_cache.py \\")
     script.puts("    --cpu-type=#{cpu} \\")
@@ -172,7 +174,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --p2=#{invoke(p2)}\\") unless p2.nil?
     script.puts("    --p3=#{invoke(p3)}\\") unless p3.nil?
 
-    script.puts("    > #{result_dir}/stdout_#{filename}.out")
+    script.puts("    > #{result_dir}/#{options[:outdir]}/stdout_#{filename}.out")
     script_abspath = File.expand_path(script.path)
     script.close
 
@@ -180,13 +182,13 @@ def sav_script( cpu, scheme, p0, options = {} )
     FileUtils.mkdir_p( "stdout" ) unless File.directory?( "stdout" )
     
     sleep(2)
-    
+
     if runmode == :qsub
-        success = system "qsub -wd #{$gem5home.path} -e stderr/ -o stdout/ #{script_abspath}"
+        success = system "qsub -wd #{$gem5home.path} -e stderr/#{options[:outdir]} -o stdout/#{options[:outdir]} #{script_abspath}"
     end
     puts "#{filename}".magenta if runmode == :local
     success = system "sh #{script_abspath}" if runmode == :local
-    #success = true
+    # success = true
     [success,filename]
 end
 
