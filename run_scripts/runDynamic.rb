@@ -184,7 +184,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     sleep(2)
 
     if runmode == :qsub
-        success = system "qsub -wd #{$gem5home.path} -e stderr/#{options[:outdir]} -o stdout/#{options[:outdir]} #{script_abspath}"
+        success = system "qsub -wd #{$gem5home.path} -e stderr/#{options[:outdir]}/ -o stdout/#{options[:outdir]}/ #{script_abspath}"
     end
     puts "#{filename}".magenta if runmode == :local
     success = system "sh #{script_abspath}" if runmode == :local

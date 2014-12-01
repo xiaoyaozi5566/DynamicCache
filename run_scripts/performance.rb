@@ -156,10 +156,25 @@ module RunScripts
       )
     end
     
+    def create_dir opts={}
+      outdir = opts[:outdir]
+      FileUtils.mkdir_p( "results/" + outdir ) unless File.directory?( "results/" + outdir )
+      FileUtils.mkdir_p( "m5out/" + outdir ) unless File.directory?( "m5out/" + outdir )
+      FileUtils.mkdir_p( "stdout/" + outdir ) unless File.directory?( "stdout/" + outdir )
+      FileUtils.mkdir_p( "stderr/" + outdir ) unless File.directory?( "stderr/" + outdir )
+    end
+    
     def performance
+      outdir = "performance_commit_dfe0c2_0_100M"
+      
+      create_dir(
+      outdir: "#{outdir}"
+      )
+      
       qsub_fast(
-      maxinsts: 10**9,
+      maxinsts: 10**8,
       fastforward: 0,
+      outdir: "#{outdir}",
       cpus: %w[detailed]
       )
     end
