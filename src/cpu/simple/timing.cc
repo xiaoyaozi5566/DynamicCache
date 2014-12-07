@@ -51,6 +51,7 @@
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/SimpleCPU.hh"
+#include "debug/Sanity.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/TimingSimpleCPU.hh"
@@ -395,8 +396,8 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 Fault
 TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
                          unsigned size, unsigned flags)
-{
-    Fault fault;
+{	
+	Fault fault;
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->instAddr();
@@ -447,7 +448,9 @@ TimingSimpleCPU::readMem(Addr addr, uint8_t *data,
         thread->dtb->translateTiming(req, tc, translation, mode);
     }
 
-    return NoFault;
+    DPRINTF(Sanity, "readMem : addr->0x%8x\n", addr);
+	
+	return NoFault;
 }
 
 bool
@@ -473,7 +476,9 @@ Fault
 TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
                           Addr addr, unsigned flags, uint64_t *res)
 {
-    uint8_t *newData = new uint8_t[size];
+    DPRINTF(Sanity, "writeMem: addr->0x%8x\n", addr);
+	
+	uint8_t *newData = new uint8_t[size];
     memcpy(newData, data, size);
 
     const int asid = 0;
@@ -618,7 +623,11 @@ void
 TimingSimpleCPU::advanceInst(Fault fault)
 {
 
-    if (_status == Faulting)
+    const Addr pc = thread->instAddr();
+	
+	DPRINTF(Sanity, "%s\n", curStaticInst->disassemble(pc));
+		
+	if (_status == Faulting)
         return;
 
     if (fault != NoFault) {
@@ -763,7 +772,10 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
-    numCycles += curCycle() - previousCycle;
+    if(pkt->isRead()) DPRINTF(Sanity, "readMem : data->%10d\n", pkt->getData());
+	else DPRINTF(Sanity, "writeMem: data->%10d\n", pkt->getData());
+	
+	numCycles += curCycle() - previousCycle;
     previousCycle = curCycle();
 
     if (pkt->senderState) {
