@@ -772,8 +772,8 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     assert(_status == DcacheWaitResponse || _status == DTBWaitResponse ||
            pkt->req->getFlags().isSet(Request::NO_ACCESS));
 
-    if(pkt->isRead()) DPRINTF(Sanity, "readMem : data->%10d\n", pkt->getData());
-	else DPRINTF(Sanity, "writeMem: data->%10d\n", pkt->getData());
+    if(pkt->isRead()) DPRINTF(Sanity, "readMem: addr->0x%8x, data->%10d\n", pkt->getAddr(), *pkt->getData());
+	else DPRINTF(Sanity, "writeMem: addr->0x%8x, data->%10d\n", pkt->getAddr(), *pkt->getData());
 	
 	numCycles += curCycle() - previousCycle;
     previousCycle = curCycle();

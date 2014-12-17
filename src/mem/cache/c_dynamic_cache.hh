@@ -43,6 +43,7 @@ protected:
 		array[count-1] = curr_misses;
 	}
 	
+	void inc_size();
 	void dec_size();
 	
 	EventWrapper<C_DynamicCache<TagStore>, &C_DynamicCache<TagStore>::adjustPartition> adjustEvent;

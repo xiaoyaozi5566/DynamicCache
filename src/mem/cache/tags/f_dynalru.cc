@@ -85,7 +85,7 @@ F_DYNALRU::dec_size(){
 }
 
 F_DYNALRU::BlkType*
-F_DYNALRU::get_evictBlk(unsigned index){
+F_DYNALRU::get_evictBlk(unsigned tcid, unsigned index){
 	for(unsigned i = 0; i < L_assoc; i++){
 		BlkType *tempBlk = sets[0][index].blks[i];
 		if(tempBlk->threadID == 1000){

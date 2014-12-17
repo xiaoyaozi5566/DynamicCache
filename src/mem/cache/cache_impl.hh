@@ -55,6 +55,7 @@
 #include "base/types.hh"
 #include "debug/Cache.hh"
 #include "debug/CachePort.hh"
+#include "debug/CacheDebug.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/cache.hh"
@@ -903,6 +904,11 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     }
 
     DPRINTF(Cache, "Handling response to %x\n", pkt->getAddr());
+	
+	if(pkt->getAddr() == 0x402b7680 || pkt->getAddr() == 0x2b7680) {
+		for( int i =0; i < pkt->getSize(); i++) 
+			DPRINTF(CacheDebug, "data %d for 0x%8x is %10d\n", i, pkt->getAddr(), *(pkt->getData()+i));
+	}
 
     MSHRQueue *mq = mshr->queue;
     bool wasFull = mq->isFull();
@@ -1691,8 +1697,11 @@ Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
         mustSendRetry = true;
         return false;
     }
-
-    cache->tracePrinter->addTrace( pkt , "recvTimingReq" );
+	
+	if(pkt->getAddr() == 0x402b7680)
+    	DPRINTF(CacheDebug, "Receive request 0x402b7680\n");
+			
+	cache->tracePrinter->addTrace( pkt , "recvTimingReq" );
     cache->timingAccess(pkt);
     return true;
 }
@@ -1941,14 +1950,14 @@ C_DynamicCache<TagStore>::adjustPartition()
 			}
 		}
 		else if (explore_phase) {
-			this->tags->inc_size();
+			inc_size();
 			explore_phase = false;
 		}
 		else{
 			if (explore_inc == false && explore_dec == false){
 				if (ratio < th_inc) {
 					explore_inc = true;
-					this->tags->inc_size();
+					inc_size();
 				}
 				else {
 					explore_dec = true;
@@ -1957,7 +1966,7 @@ C_DynamicCache<TagStore>::adjustPartition()
 			}
 			else if (explore_inc == true){
 				if (ratio < th_inc) {
-					this->tags->inc_size();
+					inc_size();
 				}
 				// stop increasing
 				else{
@@ -1976,7 +1985,7 @@ C_DynamicCache<TagStore>::adjustPartition()
 				}
 				else{
 					// go back to previous partition size
-					this->tags->inc_size();
+					inc_size();
 					
 					explore_phase = false;
 					stable_phase = true;
@@ -1995,11 +2004,23 @@ C_DynamicCache<TagStore>::adjustPartition()
 
 template<class TagStore>
 void
+C_DynamicCache<TagStore>::inc_size(){
+	unsigned numSets = this->tags->inc_size();
+	// write back if the block is dirty
+	for(unsigned i = 0; i < numSets; i++){
+		BlkType *tempBlk = this->tags->get_evictBlk(0, i);
+		if(tempBlk->isDirty() && tempBlk->isValid())
+			this->allocateWriteBuffer(this->writebackBlk(tempBlk, 1), curTick(), true);	
+	}
+}
+
+template<class TagStore>
+void
 C_DynamicCache<TagStore>::dec_size(){
 	unsigned numSets = this->tags->dec_size();
 	// write back if the block is dirty
 	for(unsigned i = 0; i < numSets; i++){
-		BlkType *tempBlk = this->tags->get_evictBlk(i);
+		BlkType *tempBlk = this->tags->get_evictBlk(1, i);
 		if (tempBlk->threadID == 0){
 			if(tempBlk->isDirty() && tempBlk->isValid())
 				this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 
@@ -2035,7 +2056,7 @@ F_DynamicCache<TagStore>::adjustPartition()
 	unsigned numSets = this->tags->dec_size();
 	// invalidate the cacheline with threadID 1000, reset used bit
 	for(unsigned i = 0; i < numSets; i++){
-		BlkType *tempBlk = this->tags->get_evictBlk(i);
+		BlkType *tempBlk = this->tags->get_evictBlk(0, i);
 		if(tempBlk == NULL) continue;
 		if(tempBlk->isDirty() && tempBlk->isValid())
 			this->allocateWriteBuffer(this->writebackBlk(tempBlk, 0), curTick(), true); 

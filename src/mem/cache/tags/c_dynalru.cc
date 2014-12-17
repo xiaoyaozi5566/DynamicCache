@@ -70,9 +70,9 @@ C_DYNALRU::init_sets(){
 }
 
 // increase the size of Low partition
-void
+unsigned
 C_DYNALRU::inc_size(){
-	if(H_assoc == H_min) return;
+	if(H_assoc == H_min) return 0;
 	
 	L_assoc += 1;
 	H_assoc -= 1;
@@ -102,6 +102,7 @@ C_DYNALRU::inc_size(){
 			sets[1][i].blks[j] = tempBlks[j];
 		}
 	}
+	return numSets;
 }
 
 unsigned 
@@ -138,6 +139,11 @@ C_DYNALRU::dec_size(){
 }
 
 C_DYNALRU::BlkType*
-C_DYNALRU::get_evictBlk(unsigned index){
-	return sets[1][index].blks[H_assoc-1];
+C_DYNALRU::get_evictBlk(unsigned tcid, unsigned index){
+	// increase the low partition
+	if(tcid == 0)
+		return sets[0][index].blks[L_assoc-1];
+	// decrease the low partition
+	else
+		return sets[1][index].blks[H_assoc-1];
 }

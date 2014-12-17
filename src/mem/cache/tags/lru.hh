@@ -204,11 +204,11 @@ public:
 
     virtual void init_sets();
 	
-	virtual void inc_size(){};
+	virtual unsigned inc_size(){return 0;};
 	
 	virtual unsigned dec_size(){return 0;};
 	
-	virtual BlkType* get_evictBlk(unsigned index){return NULL;};
+	virtual BlkType* get_evictBlk(unsigned tcid, unsigned index){return NULL;};
 
     /**
      * Generate the tag from the given address.

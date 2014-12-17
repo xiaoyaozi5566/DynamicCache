@@ -448,7 +448,7 @@ class Packet : public Printable
     bool needsResponse() const  { return cmd.needsResponse(); }
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
-	uint8_t getData() const        { return *data;}
+	uint8_t* getData() const        { return data;}
     bool isReadWrite() const    { return cmd.isReadWrite(); }
     bool isLLSC() const         { return cmd.isLLSC(); }
     bool isError() const        { return cmd.isError(); }
