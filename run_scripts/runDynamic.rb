@@ -7,6 +7,7 @@ module RunScripts
 #directories
 $gem5home = Dir.new(Dir.pwd)
 $specint_dir = ("benchmarks/spec2k6bin/specint")
+$specfp_dir = ("benchmarks/spec2k6bin/specfloat")
 $openssl_dir = ("tests/openssl-1.0.1g/test")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
@@ -16,6 +17,7 @@ $maxinsts = 10**8
 $maxtick = 2*10**15 
 $cpus = %w[timing detailed] #timing is also available
 $schemes = %w[static static0 static25 static75 static100 c_dynamic f_dynamic]
+$schemes = %w[c_dynamic]
 
 #benchmarks
 $specinvoke = { 
@@ -33,6 +35,27 @@ $specinvoke = {
     "xalan"      => "'#{$specint_dir}/Xalan -v #{$specint_dir}/t5.xml #{$specint_dir}/xalanc.xsl'"  
 }
 $specint = $specinvoke.keys.sort
+
+$specfpinvoke = {
+    "bwaves"     => "'#{$specfp_dir}/bwaves'",
+    "gamess"     => "'#{$specfp_dir}/gamess < #{$specfp_dir}/cytosine.2.config'",
+    "milc"       => "'#{$specfp_dir}/milc < #{$specfp_dir}/su3imp.in'",
+    "zeusmp"     => "'#{$specfp_dir}/zeusmp'",
+    "gromacs"    => "'#{$specfp_dir}/gromacs -silent -deffnm #{$specfp_dir}/gromacs -nice 0'",
+    "cactusADM"  => "'#{$specfp_dir}/cactusADM #{$specfp_dir}/benchADM.par'",
+    "leslie3d"   => "'#{$specfp_dir}/leslie3d < #{$specfp_dir}/leslie3d.in'",
+    "namd"       => "'#{$specfp_dir}/namd --input #{$specfp_dir}/namd.input --iterations 38 --output #{$specfp_dir}/namd.out'",
+    "dealII"     => "'#{$specfp_dir}/dealII 23'",
+    "soplex"     => "'#{$specfp_dir}/soplex -sl -e -m45000 #{$specfp_dir}/pds-50.mps'",
+    "povray"     => "'#{$specfp_dir}/povray #{$specfp_dir}/SPEC-benchmark-ref.ini'",
+    "calculix"   => "'#{$specfp_dir}/calculix -i #{$specfp_dir}/hyperviscoplastic.inp'",
+    "GemsFDTD"   => "'#{$specfp_dir}/GemsFDTD'",
+    "tonto"      => "'#{$specfp_dir}/tonto'",
+    "lbm"        => "'#{$specfp_dir}/lbm 3000 reference.dat 0 0 #{$specfp_dir}/100_100_130_ldc.of'",
+    "wrf"        => "'#{$specfp_dir}/wrf'",
+    "sphinx3"    => "'#{$specfp_dir}/sphinx_livepretend ctlfile . #{$specfp_dir}/args.an4'"  
+}
+$specfp = $specfpinvoke.keys.sort
 
 $synthinvoke = {
     "hardstride1" => "#{$synthbench_dir}hardstride -d #{$duration} -p 1",
@@ -75,7 +98,7 @@ $staticinvoke = {
 }
 
 def invoke( name )
-    $specinvoke[name] || $synthinvoke[name] || $opensslinvoke[name] || $staticinvoke[name]
+    $specinvoke[name] || $specfpinvoke[name] || $synthinvoke[name] || $opensslinvoke[name] || $staticinvoke[name]
 end
 
 def sav_script( cpu, scheme, p0, options = {} ) 
@@ -244,15 +267,15 @@ end
 
 def single opts={}
     o = {
-        cpus: %w[detailed timing],
+        cpus: %w[detailed],
         cacheSize: 4096,
         schemes: ["none"],
-        benchmarks: $specint,
+        benchmarks: $specfp,
         runmode: :local,
         threads: 4,
         l3config: "private",
         print_misses: true,
-        print_perSet_misses: true,
+        print_perSet_misses: false,
         fastforward: 0,
         maxinsts: 2*10**9,
     }.merge opts

@@ -16,19 +16,29 @@ module RunScripts
     }
 
     def cache_misses_spec
+      outdir = "cache_misses_commit_c5e799"
+      
+      create_dir(
+      outdir: "#{outdir}"
+      )
+      
       single_qsub(
+        outdir: "#{outdir}",
         cacheSize: 0
       )
       
       single_qsub(
+        outdir: "#{outdir}",
         cacheSize: 512
       )
       
       single_qsub(
+        outdir: "#{outdir}",
         cacheSize: 1024
       )
       
       single_qsub(
+        outdir: "#{outdir}",
         cacheSize: 2048
       )
     end
@@ -165,15 +175,15 @@ module RunScripts
     end
     
     def performance
-      outdir = "performance_commit_dfe0c2_0_100M"
+      outdir = "performance_commit_c5e799_1B_1B"
       
       create_dir(
       outdir: "#{outdir}"
       )
       
       qsub_fast(
-      maxinsts: 10**8,
-      fastforward: 0,
+      maxinsts: 10**9,
+      fastforward: 10**9,
       outdir: "#{outdir}",
       cpus: %w[detailed]
       )
