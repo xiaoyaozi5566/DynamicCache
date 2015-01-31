@@ -621,11 +621,8 @@ TimingSimpleCPU::sendFetch(Fault fault, RequestPtr req, ThreadContext *tc)
 
 void
 TimingSimpleCPU::advanceInst(Fault fault)
-{
-
-    const Addr pc = thread->instAddr();
-	
-	DPRINTF(Sanity, "%s\n", curStaticInst->disassemble(pc));
+{	
+	DPRINTF(Sanity, "%s\n", curStaticInst->disassemble(thread->instAddr()));
 		
 	if (_status == Faulting)
         return;
