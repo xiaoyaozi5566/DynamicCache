@@ -37,22 +37,22 @@ $specinvoke = {
 $specint = $specinvoke.keys.sort
 
 $specfpinvoke = {
-    "bwaves"     => "'#{$specfp_dir}/bwaves'",
-    "gamess"     => "'#{$specfp_dir}/gamess < #{$specfp_dir}/cytosine.2.config'",
+    # "bwaves"     => "'#{$specfp_dir}/bwaves'",
+    # "gamess"     => "'#{$specfp_dir}/gamess < #{$specfp_dir}/cytosine.2.config'",
     "milc"       => "'#{$specfp_dir}/milc < #{$specfp_dir}/su3imp.in'",
-    "zeusmp"     => "'#{$specfp_dir}/zeusmp'",
-    "gromacs"    => "'#{$specfp_dir}/gromacs -silent -deffnm #{$specfp_dir}/gromacs -nice 0'",
-    "cactusADM"  => "'#{$specfp_dir}/cactusADM #{$specfp_dir}/benchADM.par'",
-    "leslie3d"   => "'#{$specfp_dir}/leslie3d < #{$specfp_dir}/leslie3d.in'",
+    # "zeusmp"     => "'#{$specfp_dir}/zeusmp'",
+    # "gromacs"    => "'#{$specfp_dir}/gromacs -silent -deffnm #{$specfp_dir}/gromacs -nice 0'",
+    # "cactusADM"  => "'#{$specfp_dir}/cactusADM #{$specfp_dir}/benchADM.par'",
+    # "leslie3d"   => "'#{$specfp_dir}/leslie3d < #{$specfp_dir}/leslie3d.in'",
     "namd"       => "'#{$specfp_dir}/namd --input #{$specfp_dir}/namd.input --iterations 38 --output #{$specfp_dir}/namd.out'",
     "dealII"     => "'#{$specfp_dir}/dealII 23'",
     "soplex"     => "'#{$specfp_dir}/soplex -sl -e -m45000 #{$specfp_dir}/pds-50.mps'",
     "povray"     => "'#{$specfp_dir}/povray #{$specfp_dir}/SPEC-benchmark-ref.ini'",
-    "calculix"   => "'#{$specfp_dir}/calculix -i #{$specfp_dir}/hyperviscoplastic.inp'",
-    "GemsFDTD"   => "'#{$specfp_dir}/GemsFDTD'",
-    "tonto"      => "'#{$specfp_dir}/tonto'",
+    # "calculix"   => "'#{$specfp_dir}/calculix -i #{$specfp_dir}/hyperviscoplastic.inp'",
+    # "GemsFDTD"   => "'#{$specfp_dir}/GemsFDTD'",
+    # "tonto"      => "'#{$specfp_dir}/tonto'",
     "lbm"        => "'#{$specfp_dir}/lbm 3000 reference.dat 0 0 #{$specfp_dir}/100_100_130_ldc.of'",
-    "wrf"        => "'#{$specfp_dir}/wrf'",
+    # "wrf"        => "'#{$specfp_dir}/wrf'",
     "sphinx3"    => "'#{$specfp_dir}/sphinx_livepretend ctlfile . #{$specfp_dir}/args.an4'"  
 }
 $specfp = $specfpinvoke.keys.sort
@@ -125,6 +125,8 @@ def sav_script( cpu, scheme, p0, options = {} )
     result_dir = options[:result_dir]
     # shared or private l3
     l3config   = options[:l3config]
+    # l3 cache associativity
+    l3_assoc   = options[:l3_assoc]
     # runmode can be qsub: to submit jobs, local: to run the test locally, or 
     # none: to generate the scripts without running them
     runmode    = options[:runmode]
@@ -170,7 +172,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --c_dynamic_cache \\") if scheme != "f_dynamic"
     script.puts("    --f_dynamic_cache \\") if scheme == "f_dynamic"
     script.puts("    --static_cache \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
-    script.puts("    --L_assoc=#{invoke(scheme)} \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
+    # script.puts("    --L_assoc=#{invoke(scheme)} \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
     script.puts("    --H_min=#{h_min} \\") if scheme == "c_dynamic"
     script.puts("    --th_inc=-0.00#{th} \\") if scheme == "c_dynamic"
     script.puts("    --th_dec=0.00#{th} \\") if scheme == "c_dynamic"
@@ -182,6 +184,7 @@ def sav_script( cpu, scheme, p0, options = {} )
         script.puts("    --l3cache \\")
         script.puts("    --l3_size=#{cacheSize}kB\\")
         script.puts("    --l3config=#{l3config} \\")
+        script.puts("    --l3_assoc=#{l3_assoc} \\")
     end
     script.puts("    --l2trace \\") if cacheSize == 0
     script.puts("    --fast-forward=#{fastforward} \\") unless fastforward == 0
@@ -270,7 +273,7 @@ def single opts={}
         cpus: %w[detailed],
         cacheSize: 4096,
         schemes: ["none"],
-        benchmarks: $specfp,
+        benchmarks: $specinvoke.merge($specfpinvoke).keys.sort,
         runmode: :local,
         threads: 4,
         l3config: "private",

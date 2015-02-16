@@ -42,8 +42,13 @@ class L3Config(object):
             '4096kB' : '8.48ns',
             '3072kB' : '7.5',
             '2048kB' : '6.5ns',
+            '1792kB' : '6.5ns',
+            '1536kB' : '6ns',
+            '1280kB' : '5.5ns',
             '1024kB' : '5ns',
+            '768kB'  : '4.5ns',
             '512kB'  : '4ns',
+            '256kB'  : '3.33ns',
         }
 
     def connect_l2( self ): return
