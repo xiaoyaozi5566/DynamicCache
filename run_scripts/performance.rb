@@ -16,7 +16,7 @@ module RunScripts
     }
 
     def cache_misses_spec
-      outdir = "cache_misses_commit_4d1868"
+      outdir = "cache_misses_commit_708395"
       
       create_dir(
       outdir: "#{outdir}"
@@ -24,7 +24,56 @@ module RunScripts
       
       single_qsub(
         outdir: "#{outdir}",
-        cacheSize: 0,
+        cacheSize: 1,
+        l3_assoc: 1,
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 128,
+        l3_assoc: 1
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 384,
+        l3_assoc: 3
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 640,
+        l3_assoc: 5
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 896,
+        l3_assoc: 7
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 1152,
+        l3_assoc: 9
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 1408,
+        l3_assoc: 11
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 1664,
+        l3_assoc: 13
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 1920,
+        l3_assoc: 15
       )
       
       single_qsub(

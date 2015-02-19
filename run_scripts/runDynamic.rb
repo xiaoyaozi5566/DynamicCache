@@ -180,7 +180,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --print_perSet_misses \\") if options[:print_perSet_misses]
     script.puts("    --caches \\")
     script.puts("    --l2cache \\")
-    unless cacheSize == 0
+    unless cacheSize == 33
         script.puts("    --l3cache \\")
         script.puts("    --l3_size=#{cacheSize}kB\\")
         script.puts("    --l3config=#{l3config} \\")
@@ -207,7 +207,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     FileUtils.mkdir_p( "stderr" ) unless File.directory?( "stderr" )
     FileUtils.mkdir_p( "stdout" ) unless File.directory?( "stdout" )
     
-    sleep(2)
+    sleep(10)
 
     if runmode == :qsub
         success = system "qsub -wd #{$gem5home.path} -e stderr/#{options[:outdir]}/ -o stdout/#{options[:outdir]}/ #{script_abspath}"
@@ -275,7 +275,7 @@ def single opts={}
         schemes: ["none"],
         benchmarks: $specinvoke.merge($specfpinvoke).keys.sort,
         runmode: :local,
-        threads: 4,
+        threads: 1,
         l3config: "private",
         print_misses: true,
         print_perSet_misses: false,
