@@ -22,10 +22,25 @@ C_DYNALRU::C_DYNALRU( unsigned _numSets,
 	assoc = _assoc;
 	// umon counters
 	umon_counters = new unsigned[assoc];
-	for (unsigned i = 0; i < assoc; i++) umon_counters = 0;
+	reset_umon();
 	init_sets();
 }
 
+void C_DYNALRU::reset_umon()
+{
+	for (unsigned i = 0; i < assoc; i++) 
+		umon_counters = 0;
+}
+
+unsigned C_DYNALRU::curr_L_assoc()
+{
+	return L_assoc;
+}
+
+unsigned C_DYNALRU::lookup_umon(int index)
+{
+	return umon_counters[index];
+}
 // label: 0->L, 1->H
 CacheSet
 C_DYNALRU::get_set( int setnum, uint64_t label, Addr addr ){

@@ -66,6 +66,8 @@
 #include "mem/cache/c_dynamic_cache.hh"
 #include "mem/cache/f_dynamic_cache.hh"
 #include "sim/sim_exit.hh"
+#include "iostream"
+#include "fstream"
 
 template<class TagStore>
 Cache<TagStore>::Cache(const Params *p, TagStore *tags)
@@ -1895,26 +1897,130 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
 //-----------------------------------------------------------------------------
 // Coarse-grained Dynamic Cache
 //-----------------------------------------------------------------------------
+// template<class TagStore>
+// C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
+//     : SplitRPortCache<TagStore>( p, tags ), adjustEvent(this)
+// {
+// 	printf("create coarse-grained dynamic cache!\n");
+// 	interval = p->time_interval;
+// 	th_inc = p->threshold_inc;
+// 	th_dec = p->threshold_dec;
+// 	window_size = p->window_size;
+// 	explore_phase = true;
+// 	explore_inc = false;
+// 	explore_dec = false;
+// 	stable_phase = false;
+// 	// stable phase lasts for stable_length million cycles
+// 	stable_length = p->stable_length;
+// 	stable_counter = 0;
+// 	miss_history = new uint64_t[window_size];
+// 	for (int i = 0; i < window_size; i++)
+// 		miss_history[i] = 0;
+// 	// add skew to avoid some event conflicts
+// 	if(!p->static_cache) this->schedule(adjustEvent, 52+interval);
+// }
+
+// template<class TagStore>
+// void
+// C_DynamicCache<TagStore>::adjustPartition()
+// {
+// 	//printf("change partition at cycle %llu\n", (unsigned long long)curTick());
+// 	//printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
+// 	uint64_t index = curTick()/interval - 1;
+// 	if (index < window_size) {
+// 		miss_history[index] = this->missCounter;
+// 	}
+// 	else
+// 	{
+// 		uint64_t pre_avg, curr_avg;
+// 		float ratio = 0;
+// 		pre_avg = array_avg(miss_history, window_size);
+// 		update_history(miss_history, window_size, this->missCounter);
+// 		curr_avg = array_avg(miss_history, window_size);
+// 		// Calculate the change ratio
+// 		if (pre_avg != 0) ratio = curr_avg*1.0/pre_avg - 1;
+//
+// 		if (stable_phase){
+// 			// Reach the end of stable phase
+// 			if (stable_counter == stable_length){
+// 				stable_phase = false;
+// 				explore_phase = true;
+// 				stable_counter = 0;
+// 			}
+// 			else{
+// 				stable_counter++;
+// 			}
+// 		}
+// 		else if (explore_phase) {
+// 			inc_size();
+// 			explore_phase = false;
+// 		}
+// 		else{
+// 			if (explore_inc == false && explore_dec == false){
+// 				if (ratio < th_inc) {
+// 					explore_inc = true;
+// 					inc_size();
+// 				}
+// 				else {
+// 					explore_dec = true;
+// 					dec_size();
+// 				}
+// 			}
+// 			else if (explore_inc == true){
+// 				if (ratio < th_inc) {
+// 					inc_size();
+// 				}
+// 				// stop increasing
+// 				else{
+// 					// go back to previous partition size
+// 					dec_size();
+//
+// 					explore_phase = false;
+// 					stable_phase = true;
+// 					explore_inc = false;
+// 					explore_dec = false;
+// 				}
+// 			}
+// 			else if (explore_dec == true){
+// 				if (ratio < th_dec) {
+// 					dec_size();
+// 				}
+// 				else{
+// 					// go back to previous partition size
+// 					inc_size();
+//
+// 					explore_phase = false;
+// 					stable_phase = true;
+// 					explore_inc = false;
+// 					explore_dec = false;
+// 				}
+// 			}
+// 		}
+// 	}
+//
+// 	// Reset miss count
+// 	this->missCounter = 0;
+// 	// Schedule the next partition size adjust event
+// 	this->schedule(adjustEvent, curTick()+interval);
+// }
+
+// Implementation with static curve
 template<class TagStore>
 C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
     : SplitRPortCache<TagStore>( p, tags ), adjustEvent(this)
 {
 	printf("create coarse-grained dynamic cache!\n");
+	
+	std::fstream myfile((p->static_curve).c_str(), std::ios_base::in);
+	
+	assoc = p->assoc;
+	
+	miss_curve = new float[assoc];
+	
+	for (int i = 0; i < assoc; i++) myfile >> miss_curve[i];
+
 	interval = p->time_interval;
-	th_inc = p->threshold_inc;
-	th_dec = p->threshold_dec;
-	window_size = p->window_size;
-	explore_phase = true;
-	explore_inc = false;
-	explore_dec = false;
-	stable_phase = false;
-	// stable phase lasts for stable_length million cycles
-	stable_length = p->stable_length;
-	stable_counter = 0;
-	miss_history = new uint64_t[window_size];
-	for (int i = 0; i < window_size; i++)
-		miss_history[i] = 0;
-	// add skew to avoid some event conflicts
+	
 	if(!p->static_cache) this->schedule(adjustEvent, 52+interval);
 }
 
@@ -1922,83 +2028,21 @@ template<class TagStore>
 void
 C_DynamicCache<TagStore>::adjustPartition()
 {
-	//printf("change partition at cycle %llu\n", (unsigned long long)curTick());
-	//printf("Miss count = %llu\n", (unsigned long long)this->missCounter);
-	uint64_t index = curTick()/interval - 1;
-	if (index < window_size) {
-		miss_history[index] = this->missCounter;
-	}
-	else 
-	{
-		uint64_t pre_avg, curr_avg;
-		float ratio = 0;
-		pre_avg = array_avg(miss_history, window_size);
-		update_history(miss_history, window_size, this->missCounter);
-		curr_avg = array_avg(miss_history, window_size);
-		// Calculate the change ratio
-		if (pre_avg != 0) ratio = curr_avg*1.0/pre_avg - 1;
-		
-		if (stable_phase){
-			// Reach the end of stable phase
-			if (stable_counter == stable_length){
-				stable_phase = false;
-				explore_phase = true;
-				stable_counter = 0;
-			}
-			else{
-				stable_counter++;
-			}
-		}
-		else if (explore_phase) {
-			inc_size();
-			explore_phase = false;
-		}
-		else{
-			if (explore_inc == false && explore_dec == false){
-				if (ratio < th_inc) {
-					explore_inc = true;
-					inc_size();
-				}
-				else {
-					explore_dec = true;
-					dec_size();
-				}
-			}
-			else if (explore_inc == true){
-				if (ratio < th_inc) {
-					inc_size();
-				}
-				// stop increasing
-				else{
-					// go back to previous partition size
-					dec_size();
-					
-					explore_phase = false;
-					stable_phase = true;
-					explore_inc = false;
-					explore_dec = false;
-				}
-			}
-			else if (explore_dec == true){
-				if (ratio < th_dec) {
-					dec_size();
-				}
-				else{
-					// go back to previous partition size
-					inc_size();
-					
-					explore_phase = false;
-					stable_phase = true;
-					explore_inc = false;
-					explore_dec = false;
-				}
-			}
-		}
-	}
-
-	// Reset miss count
-	this->missCounter = 0;
-	// Schedule the next partition size adjust event
+	unsigned L_assoc = this->tags->curr_L_assoc();
+	unsigned H_assoc = assoc - L_assoc;
+	int Uinc, Udec;
+	// number of reduced misses when increase the way of Low by 1
+	if (L_assoc == assoc) Uinc = 0;
+	else Uinc = this->tags->lookup_umon(L_assoc+1) + miss_curve[H_assoc] - miss_curve[H_assoc-1];
+	// number of reduced misses when decrease the way of Low by 1
+	if (L_assoc == 0) Udec = 0;
+	else Udec = 0 - this->tags->lookup_umon(L_assoc) + miss_curve[H_assoc] - miss_curve[H_assoc+1];
+	
+	if (Uinc > 0 && Uinc >= Udec) inc_size();
+	else if (Udec > 0 && Udec >= Uinc) dec_size();
+	
+	this->tags->reset_umon();  
+	
 	this->schedule(adjustEvent, curTick()+interval);
 }
 

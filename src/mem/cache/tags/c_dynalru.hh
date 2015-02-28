@@ -14,6 +14,9 @@ private:
     C_DYNALRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
             unsigned _hit_latency, unsigned _L_assoc, unsigned _H_min);
 	
+	void reset_umon();
+	unsigned curr_L_assoc();
+	unsigned lookup_umon(int index);
 	virtual unsigned inc_size();
 	virtual unsigned dec_size();
 	virtual BlkType* get_evictBlk(unsigned tcid, unsigned index);

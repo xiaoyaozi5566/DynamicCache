@@ -141,6 +141,8 @@ parser.add_option("--th_inc", type="float", default=-0.001,
         help="threshold to increase the Low partition")
 parser.add_option("--th_dec", type="float", default=0.001,
         help="threshold to decrease the Low partition")
+parser.add_option("--static_curve", type="string",
+        help="static curve file")
 
 if '--ruby' in sys.argv:
     Ruby.define_options(parser)

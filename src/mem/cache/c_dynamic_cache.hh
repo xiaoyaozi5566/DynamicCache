@@ -61,6 +61,9 @@ private:
 	bool explore_phase, explore_inc, explore_dec, stable_phase;
 	// Stable length
 	uint64_t stable_length, stable_counter;
+	// Static miss curve
+	float *miss_curve;
+	unsigned assoc;
 	// protected:
 	//     virtual bool access(PacketPtr pkt, BlkType *&blk,
 	//                 int &lat, PacketList &writebacks);

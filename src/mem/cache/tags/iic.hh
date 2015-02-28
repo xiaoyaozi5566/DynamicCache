@@ -445,6 +445,9 @@ class IIC : public BaseTags
 	virtual IICTag* findBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel) const{ return NULL;}
 	virtual uint64_t locateBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel){ return 0;}
 	
+	virtual void reset_umon(){return;};
+	virtual unsigned curr_L_assoc(){return 0;};
+	virtual unsigned lookup_umon(int index){return 0;};
 	virtual unsigned inc_size(){return 0;};
 	
 	virtual unsigned dec_size(){return 0;};

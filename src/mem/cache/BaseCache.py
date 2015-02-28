@@ -83,3 +83,4 @@ class BaseCache(MemObject):
     threshold_inc  = Param.Float(-0.001, "threshold that indicates Low partition should increase")
     threshold_dec  = Param.Float(0.001, "threshold that indicates Low partition should decrease")
     window_size    = Param.Int(20, "Window size for moving average")
+    static_curve   = Param.String("astar.curve", "static miss curve")

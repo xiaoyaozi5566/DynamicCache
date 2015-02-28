@@ -204,6 +204,9 @@ public:
 
     virtual void init_sets();
 	
+	virtual void reset_umon(){return;};
+	virtual unsigned curr_L_assoc(){return 0;};
+	virtual unsigned lookup_umon(int index){return 0;};
 	virtual unsigned inc_size(){return 0;};
 	
 	virtual unsigned dec_size(){return 0;};
