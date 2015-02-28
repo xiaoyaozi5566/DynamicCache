@@ -16,7 +16,7 @@ module RunScripts
     }
 
     def cache_misses_spec
-      outdir = "cache_misses_commit_708395"
+      outdir = "cache_misses_commit_f287e7"
       
       create_dir(
       outdir: "#{outdir}"
