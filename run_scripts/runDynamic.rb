@@ -36,6 +36,15 @@ $specinvoke = {
 }
 $specint = $specinvoke.keys.sort
 
+$specinput = {
+    "bzip2_test"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/dryer.jpg 2'",
+    "bzip2_chicken"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/chicken.jpg 30'", 
+    "bzip2_liberty"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/liberty.jpg 30'", 
+    "bzip2_program"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/input.program 280'", 
+    "bzip2_html"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/text.html 280'", 
+    "bzip2_combined"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/input.combined 200'" 
+}
+
 $specfpinvoke = {
     # "bwaves"     => "'#{$specfp_dir}/bwaves'",
     # "gamess"     => "'#{$specfp_dir}/gamess < #{$specfp_dir}/cytosine.2.config'",
@@ -98,7 +107,7 @@ $staticinvoke = {
 }
 
 def invoke( name )
-    $specinvoke[name] || $specfpinvoke[name] || $synthinvoke[name] || $opensslinvoke[name] || $staticinvoke[name]
+    $specinvoke[name] || $specfpinvoke[name] || $synthinvoke[name] || $opensslinvoke[name] || $staticinvoke[name] || $specinput[name]
 end
 
 def sav_script( cpu, scheme, p0, options = {} ) 
@@ -273,7 +282,7 @@ def single opts={}
         cpus: %w[detailed],
         cacheSize: 4096,
         schemes: ["none"],
-        benchmarks: $specinvoke.merge($specfpinvoke).keys.sort,
+        benchmarks: $specinput.keys.sort, #$specinvoke.merge($specfpinvoke).keys.sort,
         runmode: :local,
         threads: 1,
         l3config: "private",
