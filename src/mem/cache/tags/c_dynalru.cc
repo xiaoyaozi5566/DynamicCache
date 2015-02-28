@@ -19,6 +19,10 @@ C_DYNALRU::C_DYNALRU( unsigned _numSets,
 	L_assoc = _L_assoc;
 	H_min = _H_min;
 	H_assoc = _assoc - L_assoc;
+	assoc = _assoc;
+	// umon counters
+	umon_counters = new unsigned[assoc];
+	for (unsigned i = 0; i < assoc; i++) umon_counters = 0;
 	init_sets();
 }
 
@@ -67,6 +71,29 @@ C_DYNALRU::init_sets(){
             }
         }
     }
+	
+	// shadow tags for monitoring
+	umon_set = new CacheSet[numSets];
+	umon_blks = new BlkType[numBlocks];
+	for( unsigned i = 0; i < numSets; i++){
+		umon_set[i].assoc = assoc;
+		umon_set[i].blks = new BlkType*[assoc];
+        for( unsigned j = 0; j<assoc; j++ ){
+            BlkType *blk = &umon_blks[blkIndex];
+            blk->data = 0;
+            ++blkIndex;
+
+            blk->status = 0;
+            blk->tag = j;
+            blk->whenReady = 0;
+            blk->isTouched = false;
+            blk->size = blkSize;
+            blk->set = i;
+			// initialize the threadID
+			blk->threadID = 0;
+            umon_set[i].blks[j]=blk;
+        }
+	}
 }
 
 // increase the size of Low partition
@@ -146,4 +173,76 @@ C_DYNALRU::get_evictBlk(unsigned tcid, unsigned index){
 	// decrease the low partition
 	else
 		return sets[1][index].blks[H_assoc-1];
+}
+
+C_DYNALRU::BlkType*
+C_DYNALRU::accessBlock(Addr addr, int &lat, int master_id, uint64_t tid)
+{
+    Addr tag = extractTag(addr);
+    unsigned set = extractSet(addr);
+    // BlkType *blk = sets[set].findBlk(tag);
+    BlkType *blk = get_set(set,tid,addr).findBlk(tag);
+    lat = hitLatency;
+    if (blk != 0 ) {
+        // move this block to head of the MRU list
+        get_set(set,tid,addr).moveToHead(blk);
+        DPRINTF(CacheRepl, "set %x: moving blk %x to MRU\n",
+                set, regenerateBlkAddr(tag, set));
+        if (blk->whenReady > curTick()
+            && blk->whenReady - curTick() > hitLatency) {
+            lat = blk->whenReady - curTick();
+        }
+        blk->refCount += 1;
+		// set the used bit
+		blk->isTouched = 1;
+    }
+	else{
+		missCounter[set]++;
+	}
+	
+	BlkType *umon_blk = umon_set[set].findBlk(tag);
+	unsigned index = umon_set[set].findBlkIndex(tag);
+	// cache hit on umon tags
+	if (umon_blk != 0) {
+		umon_counters[index]++;
+		umon_set[set].moveToHead(umon_blk);
+	}
+	// cache miss on umon tags
+	else {
+		umon_set[set].blks[assoc-1]->tag = tag;
+		umon_set[set].blks[assoc-1]->status = BlkValid | BlkReadable;
+		umon_set[set].moveToHead(umon_set[set].blks[assoc-1]);
+	}
+
+    return blk;
+}
+
+void
+C_DYNALRU::invalidateBlk(BlkType *blk, uint64_t tid)
+{
+    if (blk) {
+        if (blk->isValid()) {
+            tagsInUse--;
+            assert(blk->srcMasterId < cache->system->maxMasters());
+            occupancies[blk->srcMasterId]--;
+            blk->srcMasterId = Request::invldMasterId;
+            unsigned set = blk->set;
+            get_set(set,tid,blk->set).moveToTail(blk);
+        }
+        blk->status = 0;
+        blk->isTouched = false;
+        blk->clearLoadLocks();
+
+        // should be evicted before valid blocks
+        //unsigned set = blk->set;
+        //sets[set].moveToTail(blk);
+    }
+	BlkType *umon_blk = umon_set[blk->set].findBlk(blk->tag);
+	if (umon_blk != 0) {
+		if (umon_blk->isValid()) {
+			umon_set[blk->set].moveToTail(umon_blk);
+		}
+		umon_blk->status = 0;
+		blk->isTouched = false;
+	}
 }
