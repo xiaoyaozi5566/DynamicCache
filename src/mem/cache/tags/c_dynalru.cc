@@ -88,6 +88,7 @@ C_DYNALRU::init_sets(){
     }
 	
 	// shadow tags for monitoring
+	blkIndex = 0;
 	umon_set = new CacheSet[numSets];
 	umon_blks = new BlkType[numBlocks];
 	for( unsigned i = 0; i < numSets; i++){
