@@ -29,7 +29,7 @@ C_DYNALRU::C_DYNALRU( unsigned _numSets,
 void C_DYNALRU::reset_umon()
 {
 	for (unsigned i = 0; i < assoc; i++) 
-		umon_counters = 0;
+		umon_counters[i] = 0;
 }
 
 unsigned C_DYNALRU::curr_L_assoc()
@@ -39,6 +39,7 @@ unsigned C_DYNALRU::curr_L_assoc()
 
 unsigned C_DYNALRU::lookup_umon(int index)
 {
+	printf("index = %d, %u\n", index, umon_counters[index]);
 	return umon_counters[index];
 }
 // label: 0->L, 1->H
