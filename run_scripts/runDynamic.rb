@@ -17,7 +17,7 @@ $maxinsts = 10**8
 $maxtick = 2*10**15 
 $cpus = %w[timing detailed] #timing is also available
 $schemes = %w[static static0 static25 static75 static100 c_dynamic f_dynamic]
-$schemes = %w[c_dynamic]
+$schemes = %w[static c_dynamic]
 
 #benchmarks
 $specinvoke = { 
@@ -153,7 +153,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     
 
     filename  = "#{scheme}"
-    filename += "_#{h_min}_#{th}" if scheme == "c_dynamic"
+#    filename += "_#{h_min}_#{th}" if scheme == "c_dynamic"
     filename += "_#{cpu}_#{p0}"
     filename += "_#{p1}" unless p1.nil?
     filename += "_#{p2}" unless p2.nil?
@@ -182,9 +182,10 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --f_dynamic_cache \\") if scheme == "f_dynamic"
     script.puts("    --static_cache \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
     # script.puts("    --L_assoc=#{invoke(scheme)} \\") if scheme != "f_dynamic" && scheme != "c_dynamic"
-    script.puts("    --H_min=#{h_min} \\") if scheme == "c_dynamic"
-    script.puts("    --th_inc=-0.00#{th} \\") if scheme == "c_dynamic"
-    script.puts("    --th_dec=0.00#{th} \\") if scheme == "c_dynamic"
+    # script.puts("    --H_min=#{h_min} \\") if scheme == "c_dynamic"
+    # script.puts("    --th_inc=-0.00#{th} \\") if scheme == "c_dynamic"
+    # script.puts("    --th_dec=0.00#{th} \\") if scheme == "c_dynamic"
+    script.puts("    --static_curve=miss_curve/#{p1}.curve \\") 
     script.puts("    --print_misses \\") if options[:print_misses]
     script.puts("    --print_perSet_misses \\") if options[:print_perSet_misses]
     script.puts("    --caches \\")
@@ -193,7 +194,7 @@ def sav_script( cpu, scheme, p0, options = {} )
         script.puts("    --l3cache \\")
         script.puts("    --l3_size=#{cacheSize}kB\\")
         script.puts("    --l3config=#{l3config} \\")
-        script.puts("    --l3_assoc=#{l3_assoc} \\")
+        # script.puts("    --l3_assoc=#{l3_assoc} \\")
     end
     script.puts("    --l2trace \\") if cacheSize == 0
     script.puts("    --fast-forward=#{fastforward} \\") unless fastforward == 0
@@ -216,7 +217,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     FileUtils.mkdir_p( "stderr" ) unless File.directory?( "stderr" )
     FileUtils.mkdir_p( "stdout" ) unless File.directory?( "stdout" )
     
-    sleep(10)
+    sleep(5)
 
     if runmode == :qsub
         success = system "qsub -wd #{$gem5home.path} -e stderr/#{options[:outdir]}/ -o stdout/#{options[:outdir]}/ #{script_abspath}"
@@ -234,8 +235,8 @@ def iterate_and_submit opts={}, &block
         benchmarks: $specint,
         runmode: :local,
         threads: 1,
-        h_mins: %w[4 8],
-        ths: %w[1 2 3],
+        # h_mins: %w[4 8],
+        # ths: %w[1 2 3],
     }.merge opts
 
     o[:otherbench] = o[:benchmarks] if o[:otherbench].nil?
@@ -254,14 +255,15 @@ def iterate_and_submit opts={}, &block
       o[:benchmarks].product(o[:otherbench]).each_slice(o[:threads]) do |i|
         threads=[]
         i.each do |p0,other|
-          if scheme == "c_dynamic"
-            o[:h_mins].product(o[:ths]).each do |h_min, th|
-              o.merge!(h_min: h_min, th: th) 
-             submit.call(cpu, scheme, o, p0, other).flatten 
-            end
-          else
-            submit.call(cpu, scheme, o, p0, other).flatten 
-          end  
+          # if scheme == "c_dynamic"
+          #   o[:h_mins].product(o[:ths]).each do |h_min, th|
+          #     o.merge!(h_min: h_min, th: th)
+          #    submit.call(cpu, scheme, o, p0, other).flatten
+          #   end
+          # else
+          #   submit.call(cpu, scheme, o, p0, other).flatten
+          # end
+          submit.call(cpu, scheme, o, p0, other)
         end
         threads.each { |t| t.join }
       end

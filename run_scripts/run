@@ -55,11 +55,11 @@ include RunScripts
 # breakdown
 # coordination
 # single_qsub
-cache_misses_spec
+# cache_misses_spec
 # perSet_misses_spec
 # cache_misses_openssl
 # perSet_misses_openssl
-# performance
+performance
 
 #----------------------------------------------------------------------------
 # Parameter Sweeping

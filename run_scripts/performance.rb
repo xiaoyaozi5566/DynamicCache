@@ -257,15 +257,16 @@ module RunScripts
     end
     
     def performance
-      outdir = "performance_commit_c5e799_1B_1B"
+      outdir = "performance_commit_d99096_2B"
       
       create_dir(
       outdir: "#{outdir}"
       )
       
       qsub_fast(
-      maxinsts: 10**9,
-      fastforward: 10**9,
+      maxinsts: 2*10**9,
+      fastforward: 0,
+      cacheSize: 2048,
       outdir: "#{outdir}",
       cpus: %w[detailed]
       )
