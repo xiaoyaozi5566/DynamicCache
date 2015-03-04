@@ -21,8 +21,9 @@ private:
 	virtual unsigned dec_size();
 	virtual BlkType* get_evictBlk(unsigned tcid, unsigned index);
 	
-	using LRU::accessBlock;
 	virtual BlkType* accessBlock(Addr addr, int &lat, int master_id, uint64_t tid);
+	virtual BlkType* accessBlock(Addr addr, int &lat, int context_src, uint64_t readLabel, uint64_t writeLabel){ return NULL;}
+
 	virtual void invalidateBlk(BlkType *blk, uint64_t tid);
 	
 	protected:

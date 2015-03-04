@@ -15,10 +15,10 @@ private:
 	virtual unsigned dec_size();
 	virtual BlkType* get_evictBlk(unsigned tcid, unsigned index);
 	
-	using LRU::accessBlock;
 	virtual BlkType* accessBlock(Addr addr, int &lat, int master_id, uint64_t tid);
-	using LRU::findBlock;
+	virtual BlkType* accessBlock(Addr addr, int &lat, int context_src, uint64_t readLabel, uint64_t writeLabel){ return NULL;}
 	virtual BlkType* findBlock(Addr addr, uint64_t tid);
+	virtual BlkType* findBlock(Addr addr, uint64_t readLabel, uint64_t writeLabel){ return NULL;}
 	virtual BlkType* findVictim(Addr addr, PacketList &writebacks, uint64_t tid);
 	virtual void insertBlock(Addr addr, BlkType *blk, int master_id, uint64_t tid);
 	virtual void invalidateBlk(BlkType *blk, uint64_t tid);

@@ -2015,9 +2015,9 @@ C_DynamicCache<TagStore>::C_DynamicCache( const Params *p, TagStore *tags )
 	
 	assoc = p->assoc;
 	
-	miss_curve = new float[assoc];
+	miss_curve = new float[assoc+1];
 	
-	for (int i = 0; i < assoc; i++) myfile >> miss_curve[i];
+	for (int i = 0; i < assoc+1; i++) myfile >> miss_curve[i];
 
 	interval = p->time_interval;
 	
@@ -2033,10 +2033,10 @@ C_DynamicCache<TagStore>::adjustPartition()
 	int Uinc, Udec;
 	// number of reduced misses when increase the way of Low by 1
 	if (L_assoc == assoc) Uinc = 0;
-	else Uinc = this->tags->lookup_umon(L_assoc+1) + miss_curve[H_assoc] - miss_curve[H_assoc-1];
+	else Uinc = this->tags->lookup_umon(L_assoc+1) + int(miss_curve[H_assoc] - miss_curve[H_assoc-1]);
 	// number of reduced misses when decrease the way of Low by 1
 	if (L_assoc == 0) Udec = 0;
-	else Udec = 0 - this->tags->lookup_umon(L_assoc) + miss_curve[H_assoc] - miss_curve[H_assoc+1];
+	else Udec = 0 - this->tags->lookup_umon(L_assoc) + int(miss_curve[H_assoc] - miss_curve[H_assoc+1]);
 	
 	if (Uinc > 0 && Uinc >= Udec) inc_size();
 	else if (Udec > 0 && Udec >= Uinc) dec_size();
