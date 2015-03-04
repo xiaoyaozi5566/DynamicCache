@@ -76,7 +76,8 @@ class L3Shared( L3Config ):
                             L_assoc = options.L_assoc,
                             H_min = options.H_min,
                             threshold_inc = options.th_inc,
-                            threshold_dec = options.th_dec)
+                            threshold_dec = options.th_dec,
+                            static_curve = options.static_curve)
 
         # system.tol3bus = (
         #         RR_NoncoherentBus(num_pids = options.numpids,
