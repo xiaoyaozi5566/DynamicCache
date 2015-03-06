@@ -217,20 +217,23 @@ C_DYNALRU::accessBlock(Addr addr, int &lat, int master_id, uint64_t tid)
 		missCounter[set]++;
 	}
 	
-	BlkType *umon_blk = umon_set[set].findBlk(tag);
-	unsigned index = umon_set[set].findBlkIndex(tag);
-	// cache hit on umon tags
-	if (umon_blk != 0) {
-		umon_counters[index]++;
-		umon_set[set].moveToHead(umon_blk);
+	if (tid == 0)
+	{
+		BlkType *umon_blk = umon_set[set].findBlk(tag);
+		unsigned index = umon_set[set].findBlkIndex(tag);
+		// cache hit on umon tags
+		if (umon_blk != 0) {
+			umon_counters[index]++;
+			umon_set[set].moveToHead(umon_blk);
+		}
+		// cache miss on umon tags
+		else {
+			umon_set[set].blks[assoc-1]->tag = tag;
+			umon_set[set].blks[assoc-1]->status = BlkValid | BlkReadable;
+			umon_set[set].moveToHead(umon_set[set].blks[assoc-1]);
+		}
 	}
-	// cache miss on umon tags
-	else {
-		umon_set[set].blks[assoc-1]->tag = tag;
-		umon_set[set].blks[assoc-1]->status = BlkValid | BlkReadable;
-		umon_set[set].moveToHead(umon_set[set].blks[assoc-1]);
-	}
-
+	
     return blk;
 }
 
