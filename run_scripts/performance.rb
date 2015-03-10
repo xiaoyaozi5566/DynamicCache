@@ -125,6 +125,116 @@ module RunScripts
       )
     end
     
+    def cache_misses_spec_1MB
+      outdir = "cache_misses_commit_ee4ad5"
+      
+      create_dir(
+      outdir: "#{outdir}"
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 1,
+        l3_assoc: 1,
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 64,
+        l3_assoc: 1
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 192,
+        l3_assoc: 3
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 320,
+        l3_assoc: 5
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 448,
+        l3_assoc: 7
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 576,
+        l3_assoc: 9
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 704,
+        l3_assoc: 11
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 832,
+        l3_assoc: 13
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 960,
+        l3_assoc: 15
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 128,
+        l3_assoc: 2
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 256,
+        l3_assoc: 4
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 384,
+        l3_assoc: 6
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 512,
+        l3_assoc: 8
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 640,
+        l3_assoc: 10
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 768,
+        l3_assoc: 12
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 896,
+        l3_assoc: 14
+      )
+      
+      single_qsub(
+        outdir: "#{outdir}",
+        cacheSize: 1024,
+        l3_assoc: 16
+      )
+    end
+    
     def perSet_misses_spec
       single_qsub(
         cacheSize: 1024
@@ -257,7 +367,7 @@ module RunScripts
     end
     
     def performance
-      outdir = "performance_commit_d99096_2B"
+      outdir = "performance_commit_ee4ad5_2B"
       
       create_dir(
       outdir: "#{outdir}"
