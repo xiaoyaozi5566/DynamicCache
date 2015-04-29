@@ -425,7 +425,7 @@ class IIC : public BaseTags
      */
     IICTag* accessBlock(Addr addr, int &lat, int context_src);
     IICTag* accessBlock(Addr addr, int &lat, int context_src, uint64_t tid ){
-        return accessBlock( addr, lat, context_src, tid );
+        return accessBlock( addr, lat, context_src );
     }
 	
     virtual IICTag* accessBlock(Addr addr, int &lat, int context_src, uint64_t readLabel, uint64_t writeLabel ){
